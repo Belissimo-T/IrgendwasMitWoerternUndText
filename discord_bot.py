@@ -81,7 +81,7 @@ async def on_message(message: discord.Message):
             args = parse_args(message.content[12:])
             if 5 > len(args) or len(args) > 6:
                 # message.channel: discord.TextChannel
-                await message.channel.send(embed=wb_usage, reference=message)
+                await message.channel.send(embed=wb_usage)
             else:
                 try:
                     stream = BytesIO(main.get_image(*args))
@@ -89,19 +89,18 @@ async def on_message(message: discord.Message):
                     # message.author: discord.User
                     word = args[0].replace("·", "")
                     await message.channel.send(f"{word} von {message.author.mention}",
-                                               file=discord.File(stream, filename=f"{word.replace(' ', '_')}.png"),
-                                               reference=message)
+                                               file=discord.File(stream, filename=f"{word.replace(' ', '_')}.png"))
                 except Exception:
                     err = traceback.format_exc()
                     sys.stderr.write(err)
-                    await message.channel.send(embed=construct_error_embed(err), reference=message)
+                    await message.channel.send(embed=construct_error_embed(err))
         elif message.content.startswith("!g2p"):
             args = parse_args(message.content[4:])
 
             if len(args) != 2:
-                await message.channel.send(embed=g2p_usage, reference=message)
+                await message.channel.send(embed=g2p_usage)
             else:
-                await message.channel.send(f'"{args[0]}" ({args[1]}) in ipa is `{g2p.g2p(*args)}`.', reference=message)
+                await message.channel.send(f'"{args[0]}" ({args[1]}) in ipa is `{g2p.g2p(*args)}`.')
 
     except Exception:
         err = traceback.format_exc()
