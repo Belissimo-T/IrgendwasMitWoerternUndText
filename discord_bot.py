@@ -8,8 +8,8 @@ import g2p
 client = discord.Client()
 
 wb_usage = discord.Embed(title="Usage of `!wörterbuch`",
-                         description="Usage: `!wörterbuch '[word]' '[ipa]' '[part_of_speech]' "
-                                     "'[meaning]' '[example]' <zoom>`\n\nExample: ```!wörterbuch \"rein·joi·nen\" "
+                         description="Usage: `!wörterbuch [word] [ipa] [part_of_speech] "
+                                     "[meaning] [example] <zoom>`\n\nExample: ```!wörterbuch \"rein·joi·nen\" "
                                      "\"ˈraɪndʒɔɪnən\" \"Verb\" \"einen Internetanruf oder eine Videospielsession "
                                      "betreten\" '\"Ahh! Er ist wieder reingejoined.\"'```",
                          color=discord.Color(0xFFFF00))
@@ -27,7 +27,7 @@ wb_usage.add_field(name="zoom", value="Optional. Can be any float < `5` (I think
 wb_usage.set_footer(text="There is also a !g2p (grapheme to phoneme) command that helps getting the ipa strings.")
 
 g2p_usage = discord.Embed(title="Usage of `!g2p`",
-                          description="Usage: `!g2p '[word]' '[lang]'`\n\n"
+                          description="Usage: `!g2p [word] [lang]`\n\n"
                                       "Example: ```!g2p 'join' 'eng-US'```",
                           color=discord.Color(0xFFFF00))
 
