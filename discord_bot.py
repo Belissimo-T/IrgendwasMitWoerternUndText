@@ -88,7 +88,7 @@ async def on_message(message: discord.Message):
                     # message.channel: discord.TextChannel
                     # message.author: discord.User
                     word = args[0].replace("·", "")
-                    await message.channel.send(f"{word} von {message.author.mention}",
+                    await message.channel.send(f"{word}",# von {message.author.mention}",
                                                file=discord.File(stream, filename=f"{word.replace(' ', '_')}.png"))
                 except Exception:
                     err = traceback.format_exc()
