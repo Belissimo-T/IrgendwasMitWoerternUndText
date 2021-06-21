@@ -46,6 +46,7 @@ g2p_usage.add_field(name="**IMPORTANT NOTICE**",
                           "**don't give away any private information**.", inline=False)
 g2p_usage.set_footer(text="Also have a look at the !wörterbuch command.")
 
+
 def construct_error_embed(err: str):
     return discord.Embed(title="Error", description=f"Oh snap! Something went wrong:\n```{err}```",
                          color=discord.Color(0xFF0000))
@@ -67,6 +68,7 @@ def parse_args(message: str):
 @client.event
 async def on_ready():
     print(f'{client.user} has connected to Discord!')
+    await client.change_presence(activity=discord.Game(name="!wörterbuch"))
 
 
 @client.event
