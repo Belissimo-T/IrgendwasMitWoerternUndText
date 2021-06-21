@@ -36,7 +36,7 @@ g2p_usage.add_field(name="lang", value="The language of the word. E.g. `deu`, `e
                                        "works. If in doubt, look it up in the [api specification]"
                                        "(http://clarin.phonetik.uni-muenchen.de/BASWebServices/services/help) under "
                                        "`runG2P`. If you are real cheesy you can just type an invalid language-code and"
-                                       "all possibilities wil be listed in the error.")
+                                       "all possibilities will be listed in the error.")
 g2p_usage.add_field(name="**IMPORTANT NOTICE**",
                     value="This calls the [BAS API]"
                           "(https://clarin.phonetik.uni-muenchen.de/BASWebServices/interface/Grapheme2Phoneme) whose "
