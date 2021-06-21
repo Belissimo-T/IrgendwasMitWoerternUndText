@@ -98,7 +98,7 @@ async def on_message(message: discord.Message):
             if len(args) != 2:
                 await message.channel.send(embed=g2p_usage, reference=message)
             else:
-                await message.channel.send(f'"{args[0]}" ({args[1]}) in ipa is `{g2p.g2p(*args)}`')
+                await message.channel.send(f'"{args[0]}" ({args[1]}) in ipa is `{g2p.g2p(*args)}`.', reference=message)
 
     except Exception:
         err = traceback.format_exc()
