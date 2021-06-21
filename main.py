@@ -14,7 +14,7 @@ chrome_options.add_argument("--headless")
 # · ˈ
 
 print("Creating browser...")
-driver = webdriver.Chrome("./chromedriver", options=chrome_options)
+driver = webdriver.Chrome(options=chrome_options)
 
 print("Calling google for base site...")
 driver.get("https://www.google.de/search?q=laufen+definition")
