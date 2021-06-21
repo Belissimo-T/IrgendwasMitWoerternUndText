@@ -18,7 +18,7 @@ def g2p(word, lng):
     assert parsed_html.body.find('success').text == "true", f"Something went wrong: {parsed_html}"
     download_link = parsed_html.body.find('downloadlink').text
 
-    return requests.get(download_link).content.decode("utf-8").replace(" ", "")
+    return requests.get(download_link).content.decode("utf-8").replace(" ", "").replace("\n", "")
 
 
 if __name__ == '__main__':
