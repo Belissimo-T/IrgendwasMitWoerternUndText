@@ -1,5 +1,6 @@
-requests
-beautifulsoup4
-selenium
-Pillow
+requests~=2.25.1
+beautifulsoup4~=4.9.3
+selenium~=3.141.0
+Pillow~=8.2.0
 lxml
+discord~=1.0.1
