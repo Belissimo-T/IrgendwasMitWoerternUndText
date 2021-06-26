@@ -122,7 +122,7 @@ class Dictionary:
             return out
 
     def __iter__(self):
-        return iter(list(self._data.values()))
+        return iter(self._data.values())
 
     def __len__(self):
         return len(self._data)

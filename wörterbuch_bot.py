@@ -153,13 +153,13 @@ async def wb_list_help(message: discord.Message):
 
 @route("!wörterbuch list")
 async def wb_list(message: discord.Message):
-    files = []
-    for word in dictionary:
-        files.append(word.get_dc_file())
-    print(files)
-    out = discord.Embed(title="Wörterbuch Listing", description=f"total word count: `{len(dictionary)}`")
+    await message.channel.send(
+        discord.Embed(title="Wörterbuch Listing", description=f"total word count: `{len(dictionary)}`"))
 
-    await message.channel.send(embed=out, files=files)
+    for word in dictionary:
+        embed = discord.Embed(title=word.get_display_name())
+        embed.set_image(url="attachment://image.png")
+        await message.channel.send(embed=embed, file=word.get_dc_file())
 
 
 @route("!wörterbuch search help")
