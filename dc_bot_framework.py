@@ -67,7 +67,8 @@ def run():
             args = parse_args(message.content[end:])
             print(args)
 
-            await record_command.function(message, *args)
+            with message.channel.typing():
+                await record_command.function(message, *args)
 
         except Exception:
             err = traceback.format_exc()
