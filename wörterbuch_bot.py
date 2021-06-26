@@ -155,7 +155,7 @@ async def wb_list_help(message: discord.Message):
 async def wb_list(message: discord.Message):
     await message.channel.send(embed=
                                discord.Embed(title="Wörterbuch Listing",
-                                             description=f"total word count: `{len(dictionary)}`"))
+                                             description=f"total word count: `{len(dictionary)}`"), delete_after=5*60)
 
     for word in dictionary:
         embed = discord.Embed(title=word.get_display_name())
