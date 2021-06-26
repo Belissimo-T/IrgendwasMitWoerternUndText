@@ -51,7 +51,7 @@ def get_zitat(text: str, author: str):
     random.shuffle(fonts)
     for font_name in fonts:
         try:
-            font = ImageFont.truetype(font_name, size)
+            font = ImageFont.truetype(path + font_name, size)
             break
         except OSError as e:
             traceback.print_exc()
