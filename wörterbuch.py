@@ -23,7 +23,7 @@ class Word:
                  example: str, force_no_stressed: bool = False):
         ipa = ipa.replace("'", "ˈ").replace("´", "ˈ").replace("`", "ˈ")
 
-        assert "ˈ" in ipa and not force_no_stressed, "Phonetic transcription doesn't show a stressed syllable."
+        assert "ˈ" in ipa or force_no_stressed, "Phonetic transcription doesn't show a stressed syllable."
 
         self.syllables = syllables
         self.ipa = ipa
