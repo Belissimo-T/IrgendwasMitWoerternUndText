@@ -38,10 +38,10 @@ def get_lines(text: str, font: ImageFont.ImageFont, max_width: int):
     return lines
 
 
-def get_zitat(text: str, author: str):
-    # breakpoint()
+def get_zitat(text: str, author: str, image_data: bytes = None):
     dim = (1600, 900)
-    image_data = get_image(*dim)
+
+    image_data = get_image(*dim) if image_data is None else image_data
     image: PngImagePlugin.PngImageFile = Image.open(BytesIO(image_data), formats=["WEBP"])
     draw = ImageDraw.Draw(image)
 

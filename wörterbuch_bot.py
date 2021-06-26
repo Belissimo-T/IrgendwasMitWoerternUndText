@@ -4,7 +4,7 @@ import os
 import wörterbuch
 from dc_bot_framework import route, run
 import g2p
-from zitat import get_zitat
+from zitat import get_zitat, get_image
 
 import discord
 
@@ -57,10 +57,12 @@ async def zitat_help(message: discord.Message):
 
 @route("!zitat")
 async def zitat(message: discord.Message, text: str, author: str):
-    img = io.BytesIO(get_zitat(text, author))
+    background = get_image()
+    for _ in range(10):
+        img = io.BytesIO(get_zitat(text, author, background))
 
-    file = discord.File(img, filename="zitat.png")
-    await message.channel.send("pure inspiration.", file=file)
+        file = discord.File(img, filename="zitat.png")
+        await message.channel.send("pure inspiration.", file=file)
 
 
 @route("!getmsg")
