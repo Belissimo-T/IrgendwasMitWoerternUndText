@@ -156,7 +156,7 @@ async def wb_list(message: discord.Message):
     files = []
     for word in dictionary:
         files.append(word.get_dc_file())
-
+    print(files)
     out = discord.Embed(title="Wörterbuch Listing", description=f"total word count: `{len(dictionary)}`")
 
     await message.channel.send(embed=out, files=files)

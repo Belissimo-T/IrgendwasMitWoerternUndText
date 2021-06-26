@@ -59,7 +59,7 @@ class Word:
                f"{self.meaning!r} {self.example!r}"
 
     def get_dc_file(self, filename: str = "image.png"):
-        display_name = self.get_data_key()
+        display_name = self.get_display_name()
         bytes_arr = main.get_image(display_name, self.ipa, self.part_of_speech, self.meaning,
                                    self.example)
         stream = BytesIO(bytes_arr)
@@ -122,7 +122,7 @@ class Dictionary:
             return out
 
     def __iter__(self):
-        return iter(self._data.values())
+        return iter(list(self._data.values()))
 
     def __len__(self):
         return len(self._data)
