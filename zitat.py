@@ -1,5 +1,7 @@
 import os
 import random
+import sys
+import traceback
 
 import requests
 from PIL import Image, ImageDraw, ImageFont, PngImagePlugin
@@ -51,8 +53,9 @@ def get_zitat(text: str, author: str):
         try:
             font = ImageFont.truetype(font_name, size)
             break
-        except OSError:
-            print(f"Couldn't open {font_name}")
+        except OSError as e:
+            traceback.print_exc()
+            print(f"Couldn't open {font_name}, {e}")
     else:
         raise OSError("Stopped trying opening fonts. No fonts openable.")
     lines = "\n".join(get_lines(text, font, dim[0] - 200))
