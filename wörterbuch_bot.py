@@ -58,7 +58,7 @@ async def zitat_help(message: discord.Message):
 @route("!zitat")
 async def zitat(message: discord.Message, text: str, author: str):
     background = get_image()
-    for _ in range(10):
+    for _ in range(5):
         img = io.BytesIO(get_zitat(text, author, background))
 
         file = discord.File(img, filename="zitat.png")
