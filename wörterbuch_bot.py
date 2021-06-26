@@ -1,8 +1,10 @@
+import io
 import os
 
 import wörterbuch
 from dc_bot_framework import route, run
 import g2p
+from zitat import get_zitat
 
 import discord
 
@@ -37,6 +39,28 @@ def get_wb_help(name: str):
 
 def escape(string: str) -> str:
     return "".join(["\\" * (char in ESCAPED_CHARS) + char for char in string])
+
+
+@route("!zitat help")
+async def zitat_help(message: discord.Message):
+    help_embed = discord.Embed(title="Usage of `!zitat`",
+                               description="Usage: `!zitat [text] [author]`\n\nExample: "
+                                           "```!zitat \"Trapdoors und Repeater sind eigentlich das gleiche.\" "
+                                           "\"Zwakel\"```",
+                               color=discord.Color(0xFFFF00))
+
+    help_embed.add_field(name="text", value="The text of the Zitat.")
+    help_embed.add_field(name="author", value="The author of the Zitat.")
+
+    await message.channel.send(embed=help_embed)
+
+
+@route("!zitat")
+async def zitat(message: discord.Message, text: str, author: str):
+    img = io.BytesIO(get_zitat(text, author))
+
+    file = discord.File(img, filename="zitat.png")
+    await message.channel.send("pure inspiration.", file=file)
 
 
 @route("!getmsg")
@@ -80,7 +104,9 @@ async def wb(message: discord.Message):
                          inline=False)
     help_embed.add_field(name="`!wörterbuch fullhelp`", value="Calls the help of every function.", inline=False)
 
-    help_embed.add_field(name="`!g2p`", value="Grapheme to Phoneme: Helps getting the ipa.", inline=False)
+    help_embed.add_field(name="`!g2p`", value="Grapheme to Phoneme: Helps getting the ipa string.", inline=False)
+
+    help_embed.add_field(name="`!zitat`", value="Generates a Zitat.", inline=False)
 
     await message.channel.send(embed=help_embed)
 
@@ -155,12 +181,12 @@ async def wb_list_help(message: discord.Message):
 async def wb_list(message: discord.Message):
     await message.channel.send(embed=
                                discord.Embed(title="Wörterbuch Listing",
-                                             description=f"total word count: `{len(dictionary)}`"), delete_after=5*60)
+                                             description=f"total word count: `{len(dictionary)}`"), delete_after=5 * 60)
 
     for word in dictionary:
         embed = discord.Embed(title=word.get_display_name())
         embed.set_image(url="attachment://image.png")
-        await message.channel.send(embed=embed, file=word.get_dc_file(), delete_after=5*60)
+        await message.channel.send(embed=embed, file=word.get_dc_file(), delete_after=5 * 60)
 
 
 @route("!wörterbuch search help")
