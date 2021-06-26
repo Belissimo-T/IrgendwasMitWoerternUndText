@@ -40,7 +40,7 @@ def get_zitat(text: str, author: str):
     # breakpoint()
     dim = (1600, 900)
     image_data = get_image(*dim)
-    image: PngImagePlugin.PngImageFile = Image.open(BytesIO(image_data))
+    image: PngImagePlugin.PngImageFile = Image.open(BytesIO(image_data), formats=["WEBP"])
     draw = ImageDraw.Draw(image)
 
     pos = (100, 100)
