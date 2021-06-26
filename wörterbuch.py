@@ -21,7 +21,7 @@ def split_word(word: str, chars="·*") -> list[str]:
 class Word:
     def __init__(self, syllables: list[str], ipa: str, part_of_speech: str, meaning: str,
                  example: str):
-        ipa = ipa.replace("'´`", "ˈ")
+        ipa = ipa.replace("'", "ˈ").replace("´", "ˈ").replace("`", "ˈ")
 
         assert "ˈ" in ipa, "Phonetic transcription doesn't show a stressed syllable."
 
