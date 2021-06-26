@@ -153,8 +153,9 @@ async def wb_list_help(message: discord.Message):
 
 @route("!wörterbuch list")
 async def wb_list(message: discord.Message):
-    await message.channel.send(
-        discord.Embed(title="Wörterbuch Listing", description=f"total word count: `{len(dictionary)}`"))
+    await message.channel.send(embed=
+                               discord.Embed(title="Wörterbuch Listing",
+                                             description=f"total word count: `{len(dictionary)}`"))
 
     for word in dictionary:
         embed = discord.Embed(title=word.get_display_name())
