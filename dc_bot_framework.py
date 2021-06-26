@@ -67,7 +67,7 @@ def run():
             args = parse_args(message.content[end:])
             print(args)
 
-            with message.channel.typing():
+            async with message.channel.typing():
                 await record_command.function(message, *args)
 
         except Exception:

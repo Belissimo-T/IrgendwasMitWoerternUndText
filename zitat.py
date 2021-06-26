@@ -12,7 +12,7 @@ from io import BytesIO
 if os.name == "nt":
     path = "C:/Windows/Fonts"
 else:
-    path = "fonts/"
+    path = "fonts"
 
 _, _, (fonts, ) = zip(*list(os.walk(path)))
 
@@ -51,7 +51,7 @@ def get_zitat(text: str, author: str, image_data: bytes = None):
     random.shuffle(fonts)
     for font_name in fonts:
         try:
-            font = ImageFont.truetype(path + font_name, size)
+            font = ImageFont.truetype(os.path.join(path, font_name), size)
             break
         except OSError as e:
             traceback.print_exc()
