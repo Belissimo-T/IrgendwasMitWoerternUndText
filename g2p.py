@@ -83,8 +83,6 @@ def get_syllables(phonemes: list[str], word: str):
             phoneme_syllables.append("")
             word_syllables.append("")
 
-        # add
-
         phoneme_syllables[-1] += phonemes[i]
         word_syllables[-1] += word[i]
 

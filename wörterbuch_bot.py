@@ -160,7 +160,7 @@ async def wb_list(message: discord.Message):
     for word in dictionary:
         embed = discord.Embed(title=word.get_display_name())
         embed.set_image(url="attachment://image.png")
-        await message.channel.send(embed=embed, file=word.get_dc_file())
+        await message.channel.send(embed=embed, file=word.get_dc_file(), delete_after=5*60)
 
 
 @route("!wörterbuch search help")
