@@ -20,20 +20,16 @@ def split_word(word: str, chars="·*") -> list[str]:
 
 class Word:
     def __init__(self, syllables: list[str], ipa: str, part_of_speech: str, meaning: str,
-                 example: str):
+                 example: str, force_no_stressed: bool = False):
         ipa = ipa.replace("'", "ˈ").replace("´", "ˈ").replace("`", "ˈ")
 
-        assert "ˈ" in ipa, "Phonetic transcription doesn't show a stressed syllable."
+        assert "ˈ" in ipa and not force_no_stressed, "Phonetic transcription doesn't show a stressed syllable."
 
         self.syllables = syllables
         self.ipa = ipa
         self.part_of_speech = part_of_speech
         self.meaning = meaning
         self.example = example
-
-        if "ˈ" not in self.ipa:
-            # raise Exception("No syllable stressed with an \"ˈ\"!")
-            ...
 
     def get_data_key(self):
         return "".join(self.syllables)
