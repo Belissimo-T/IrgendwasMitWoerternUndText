@@ -18,7 +18,7 @@ _, _, (fonts, ) = zip(*list(os.walk(path)))
 def get_image(width: int = 1600, height: int = 900, blur: int = None) -> bytes:
     blur = random.randint(0, 3) if blur is None else blur
 
-    url = f"https://picsum.photos/{width}/{height}.jpg" + (f"?blur={blur}" if blur else "")
+    url = f"https://picsum.photos/{width}/{height}.webp" + (f"?blur={blur}" if blur else "")
     data = requests.get(url).content
     return data
 
@@ -43,7 +43,7 @@ def get_zitat(text: str, author: str):
     image: PngImagePlugin.PngImageFile = Image.open(BytesIO(image_data))
     draw = ImageDraw.Draw(image)
 
-    pos = (int(dim[0]/2), 100)
+    pos = (100, 100)
 
     size = random.randint(80, 150)
     random.shuffle(fonts)
