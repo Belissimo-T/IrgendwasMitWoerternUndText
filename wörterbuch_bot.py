@@ -225,7 +225,7 @@ async def g2p_(message: discord.Message, _word, lang):
 
     _, predicted_text_syllables = g2p.get_syllables(phonemes, _word)
     # print(predicted_text_syllables, predicted_phoneme_syllables)
-    word = wörterbuch.Word(predicted_text_syllables, "".join(phonemes).replace("+", ""), "", "", "")
+    word = wörterbuch.Word(predicted_text_syllables, "'" + "".join(phonemes).replace("+", ""), "", "", "")
 
     description = f"word: `{word.get_display_name()}`" \
                   f"\nipa: `{word.ipa}`\n"
