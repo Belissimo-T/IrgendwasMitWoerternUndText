@@ -69,23 +69,23 @@ def has_vowels(syllable: Union[list[str], str]):
 def get_syllables(phonemes: list[str], word: str):
     assert len(phonemes) == len(word)
 
-    phoneme_syllables: list[list[str]] = [[]]
+    phoneme_syllables: list[str] = [""]
     word_syllables: list[str] = [""]
     for i in range(len(phonemes)):
         # if current syllable has no vowel, keep adding phonemes
         if not has_vowels(phoneme_syllables[-1]):
-            if phonemes[i] != "_": phoneme_syllables[-1].append(phonemes[i])
+            if phonemes[i] != "_": phoneme_syllables[-1] += phonemes[i]
             word_syllables[-1] += word[i]
             continue
 
         # create a new syllable if next phoneme is a vowel
         if len(phonemes) > i + 1 and has_vowels(phonemes[i + 1]):
-            phoneme_syllables.append([])
+            phoneme_syllables.append("")
             word_syllables.append("")
 
         # add
 
-        phoneme_syllables[-1].append(phonemes[i])
+        phoneme_syllables[-1] += phonemes[i]
         word_syllables[-1] += word[i]
 
     return phoneme_syllables, word_syllables
