@@ -64,6 +64,8 @@ async def zitat(message: discord.Message, text: str, author: str):
         file = discord.File(img, filename="zitat.png")
         await message.channel.send("pure inspiration.", file=file)
 
+    await message.delete()
+
 
 @route("!getmsg")
 async def getmsg(message: discord.Message, id_: str):
