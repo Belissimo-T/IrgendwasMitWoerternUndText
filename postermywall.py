@@ -32,6 +32,79 @@ size_options = ["all", "poster", "a1", "a2", "a3", "a4", "album-cover", "banner-
 client = httpx.AsyncClient()
 
 
+def render_update():
+    print("Invoking renderAll")
+    ActionChains(driver).key_down(Keys.CONTROL).send_keys('-').key_up(Keys.CONTROL).perform()
+    ActionChains(driver).key_down(Keys.CONTROL).send_keys('+').key_up(Keys.CONTROL).perform()
+
+
+def zoom(target: float = 100) -> int:
+    el = driver.find_element_by_xpath('// *[ @ id = "poster-nav-view"] / div')
+
+    d = target - int(el.get_attribute('innerHTML')[:-1])
+
+    while 1:
+        current = int(el.get_attribute('innerHTML')[:-1])
+        dnew = target - current
+        if -d < dnew - d:
+            return current
+
+        if dnew < 0:
+            ActionChains(driver).key_down(Keys.CONTROL).send_keys('-').key_up(Keys.CONTROL).perform()
+        elif dnew > 0:
+            ActionChains(driver).key_down(Keys.CONTROL).send_keys('+').key_up(Keys.CONTROL).perform()
+        else:
+            return current
+
+
+async def prepare(url: str):
+    print("Getting website...")
+    driver.get(url)
+
+    set_up = """
+    a = function() {
+        window.hopefullyklass = this;
+        this._renderAll();
+    }
+    fabric.Canvas.prototype._renderAll = fabric.Canvas.prototype.renderAll
+    fabric.Canvas.prototype.renderAll = a
+    """
+
+    print("Waiting...")
+    await asyncio.sleep(5)
+
+    print("Click on the cookie-accept banner...")
+    try:
+        driver.find_element_by_xpath('//*[@id="user-consent-form"]/div[2]/div[2]/a').click()
+    except selenium.common.exceptions.ElementNotInteractableException:
+        print("...already accepted")
+
+    print("Running first script...")
+    driver.execute_script(set_up)
+
+    render_update()
+
+    for _ in range(20):
+        try:
+            driver.execute_script("return window.hopefullyklass.toJSON();")
+            return
+        except selenium.common.exceptions.JavascriptException as e:
+            print(e)
+
+            print("Render update...")
+            render_update()
+
+            print("Waiting...")
+            await asyncio.sleep(2)
+    else:
+        raise Exception("Could not get the Canvas object. Tried 20 times. Aborting.")
+
+
+def screenshot() -> bytes:
+    zoom(100)
+    return driver.find_element_by_id("whiteboard").screenshot_as_png
+
+
 def format_obj(obj: dict):
     path, obj = obj
     text = obj['text'].replace('\n', '\\n')
@@ -95,34 +168,7 @@ class Template:
                             filename=f"{self.id_}.{'jpg' if self.type_ == 'image' else 'mp4'}")
 
     async def get_objects(self) -> list[dict]:
-        print("Getting website...")
-        driver.get(self.customize_url)
-
-        set_up = """
-        a = function() {
-            window.hopefullyklass = this;
-            this._renderAll();
-        }
-        fabric.Canvas.prototype._renderAll = fabric.Canvas.prototype.renderAll
-        fabric.Canvas.prototype.renderAll = a
-        """
-
-        print("Waiting...")
-        await asyncio.sleep(5)
-
-        print("Click on the cookie-accept banner")
-        driver.find_element_by_xpath('//*[@id="user-consent-form"]/div[2]/div[2]/a').click()
-
-        print("Running first script...")
-        driver.execute_script(set_up)
-
-        print("Press CTRL+- to invoke renderAll function in order to get object")
-        ActionChains(driver).key_down(Keys.CONTROL).send_keys('-').key_up(Keys.CONTROL).perform()
-        # ActionChains(driver).key_down(Keys.CONTROL).send_keys('-').key_up(Keys.CONTROL).perform()
-        # ActionChains(driver).key_down(Keys.CONTROL).send_keys('-').key_up(Keys.CONTROL).perform()
-        # ActionChains(driver).key_down(Keys.CONTROL).send_keys('+').key_up(Keys.CONTROL).perform()
-        # ActionChains(driver).key_down(Keys.CONTROL).send_keys('+').key_up(Keys.CONTROL).perform()
-        # ActionChains(driver).key_down(Keys.CONTROL).send_keys('+').key_up(Keys.CONTROL).perform()
+        await prepare(self.customize_url)
 
         def _get_objects(object: dict, path: list[int] = None):
             path = [] if path is None else path
@@ -136,24 +182,8 @@ class Template:
 
             return out
 
-        object_json = ""
-        last_e = None
-        for _ in range(20):
-            try:
-                print("Waiting...")
-                await asyncio.sleep(2)
-
-                read = """
-                return (function() {return window.hopefullyklass.toJSON();})();
-                """
-
-                print("Running second script...")
-                object_json = driver.execute_script(read)
-                break
-            except selenium.common.exceptions.JavascriptException as e:
-                last_e = e
-        else:
-            raise Exception(f"Getting the Canvas class failed 20 times. Aborting, last error: {last_e}")
+        print("Running second script...")
+        object_json = driver.execute_script("return window.hopefullyklass.toJSON();")
 
         print("Finished!")
         return _get_objects(object_json)
@@ -166,6 +196,33 @@ class Template:
             out.set_image(url=self.preview_url)
             out.set_thumbnail(url=self.thumb_url)
         return out
+
+    async def modify(self, modifications: list[tuple[list[int], str]]):
+        await prepare(self.customize_url)
+
+        for path, mod in modifications:
+            modstr = f"window.hopefullyklass{''.join([f'._objects[{i}]' for i in path])}.setText({mod!r})"
+            print(modstr)
+            driver.execute_script(modstr)
+
+        render_update()
+
+    async def get_dc_modify_file(self, modifications: list[tuple[list[int], str]]) -> discord.File:
+        zoom_factor = 4
+
+        print("Resizing window...")
+        driver.set_window_size(1600 * zoom_factor, 900 * zoom_factor)
+
+        print("Scaling window...")
+        driver.execute_script(f"document.body.style.zoom='{zoom_factor}'")
+
+        await self.modify(modifications)
+
+        # not needed, it zooms itself
+        # print("Zooming Canvas")
+        # zoom(.7 * zoom_factor)
+
+        return discord.File(fp=io.BytesIO(screenshot()), filename="image.png")
 
 
 async def search(keyword: str, type_: Literal["all", "image", "video"] = "all", size: str = "all") -> list[Template]:

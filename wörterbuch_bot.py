@@ -46,8 +46,15 @@ def escape(string: str) -> str:
 
 
 @route("!postermywall render")
-async def postermywall_render(message: discord.Message, **changes):
-    ...
+async def postermywall_render(message: discord.Message, id_: str, changes):
+    template = await postermywall.Template.from_id(id_)
+
+    out = discord.Embed(title=f"Custom Template based on `{id_}`", description=f"command: `!postermywall render "
+                                                                               f"{id_!r} {changes!r}`")
+    out.set_image(url="attachment://image.png")
+    file = await template.get_dc_modify_file(changes)
+    await message.channel.send(embed=out, file=file)
+
 
 @route("!postermywall attrs")
 async def postermywall_attrs(message: discord.Message, template_id: str):
@@ -57,8 +64,8 @@ async def postermywall_attrs(message: discord.Message, template_id: str):
 @route("!postermywall search")
 async def postermywall_search(message: discord.Message, search_str: str,
                               type_: Literal["all", "image", "video"] = "all", size: str = "all"):
-    await asyncio.gather(*[message.channel.send("temporary message, gets auto-deleted after 60 s",
-                                                embed=template.get_dc_embed(), delete_after=60,
+    await asyncio.gather(*[message.channel.send("temporary message, gets auto-deleted after 2 min.",
+                                                embed=template.get_dc_embed(), delete_after=2 * 60,
                                                 file=await template.get_dc_file()) for template in
                            await pmw.search(search_str, type_, size)])
 
