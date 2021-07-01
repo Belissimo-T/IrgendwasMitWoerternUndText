@@ -17,7 +17,7 @@ import cachelib
 
 chrome_options = Options()
 # MUST BE HEADLESS AND HAVE VERY LARGE WINDOW SIZE
-chrome_options.add_argument("--headless")
+# chrome_options.add_argument("--headless")
 
 print("Creating browser...")
 driver = webdriver.Chrome(options=chrome_options)
