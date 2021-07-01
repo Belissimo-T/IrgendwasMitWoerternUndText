@@ -1,4 +1,4 @@
-# import dict_entry_getter
+import dict_entry_getter
 
 import pickle
 from typing import Union
