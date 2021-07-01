@@ -22,7 +22,11 @@ def route(alias: str, not_allowed_in_parallel: bool = False):
                 print("Got lock!")
 
             print("Call!!!!!")
-            await func(*args, **kwargs)
+            try:
+                await func(*args, **kwargs)
+            except Exception as e:
+                lock.release()
+                raise e
 
             if lock:
                 print("Releasing lock")
