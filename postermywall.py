@@ -192,9 +192,9 @@ class Template:
         out = discord.Embed(title=f"Attributes of `{self.id_}`",
                             description="\n".join([format_obj(obj) for obj in await self.get_objects()
                                                    if "text" in obj[1]]))
-        if self.type_ == "image":
-            out.set_image(url=self.preview_url)
-            out.set_thumbnail(url=self.thumb_url)
+
+        out.set_image(url=self.preview_url)
+        out.set_thumbnail(url=self.thumb_url)
         return out
 
     async def modify(self, modifications: list[tuple[list[int], str]]):
