@@ -1,4 +1,4 @@
-import main
+# import dict_entry_getter
 
 import pickle
 from typing import Union
@@ -56,8 +56,8 @@ class Word:
 
     def get_dc_file(self, filename: str = "image.png"):
         display_name = self.get_display_name()
-        bytes_arr = main.get_image(display_name, self.ipa, self.part_of_speech, self.meaning,
-                                   self.example)
+        bytes_arr = dict_entry_getter.get_image(display_name, self.ipa, self.part_of_speech, self.meaning,
+                                                self.example)
         stream = BytesIO(bytes_arr)
         return discord.File(stream, filename=filename)
 

@@ -1,6 +1,10 @@
+import asyncio
 import io
 import os
+from typing import Literal
 
+import postermywall
+import postermywall as pmw
 import wörterbuch
 from dc_bot_framework import route, run
 import g2p
@@ -39,6 +43,24 @@ def get_wb_help(name: str):
 
 def escape(string: str) -> str:
     return "".join(["\\" * (char in ESCAPED_CHARS) + char for char in string])
+
+
+@route("!postermywall render")
+async def postermywall_render(message: discord.Message, **changes):
+    ...
+
+@route("!postermywall attrs")
+async def postermywall_attrs(message: discord.Message, template_id: str):
+    await message.channel.send(embed=await (await postermywall.Template.from_id(template_id)).get_dc_attrs_embed())
+
+
+@route("!postermywall search")
+async def postermywall_search(message: discord.Message, search_str: str,
+                              type_: Literal["all", "image", "video"] = "all", size: str = "all"):
+    await asyncio.gather(*[message.channel.send("temporary message, gets auto-deleted after 60 s",
+                                                embed=template.get_dc_embed(), delete_after=60,
+                                                file=await template.get_dc_file()) for template in
+                           await pmw.search(search_str, type_, size)])
 
 
 @route("!zitat help")
@@ -183,14 +205,16 @@ async def wb_list_help(message: discord.Message):
 
 @route("!wörterbuch list")
 async def wb_list(message: discord.Message):
-    await message.channel.send(embed=
-                               discord.Embed(title="Wörterbuch Listing",
-                                             description=f"total word count: `{len(dictionary)}`"), delete_after=5 * 60)
+    await message.channel.send("temporary message, gets auto-deleted after 2 min",
+                               embed=discord.Embed(title="Wörterbuch Listing",
+                                                   description=f"total word count: `{len(dictionary)}`"),
+                               delete_after=2 * 60)
 
     for word in dictionary:
         embed = discord.Embed(title=word.get_display_name())
         embed.set_image(url="attachment://image.png")
-        await message.channel.send(embed=embed, file=word.get_dc_file(), delete_after=5 * 60)
+        await message.channel.send("temporary message, gets auto-deleted after 2 min", embed=embed,
+                                   file=word.get_dc_file(), delete_after=2 * 60)
 
 
 @route("!wörterbuch search help")

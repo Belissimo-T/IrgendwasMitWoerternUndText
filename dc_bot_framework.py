@@ -1,4 +1,5 @@
 import dataclasses
+import random
 from typing import Callable, Union
 import discord
 import traceback
@@ -14,9 +15,15 @@ def route(alias: str):
 
 
 def construct_error_embed(err: str):
-    return discord.Embed(title="Error", description=f"Oh snap! Something went wrong:\n```{err}```"
-                                                    f"Don't be scared to read the error, most are simple mistakes and "
-                                                    f"can be easily resolved! 🧐",
+    # BTW, https://en.wikipedia.org/wiki/Minced_oath
+    messages = ["Snap!", "Shoot!", "Shucks!", "Shizer!", "Darn!", "Frick!", "Juck!", "Dang!", "Frack!", "Frak!",
+                "Frig!", "Fug!", "F!", "my gosh!"]
+    return discord.Embed(title="Error",
+                         description=f"{'Oh ' if random.random() > .5 else ''}{random.choice(messages)} Something went "
+                                     f"wrong:\n```{err}```"
+                                     f"Don't be scared to read the error, most are simple mistakes and "
+                                     f"can be easily resolved! 🧐. Sometimes, trying again 🔁 "
+                                     f"also helps!",
                          color=discord.Color(0xFF0000))
 
 
