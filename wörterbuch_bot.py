@@ -45,8 +45,9 @@ def escape(string: str) -> str:
     return "".join(["\\" * (char in ESCAPED_CHARS) + char for char in string])
 
 
-@route("!postermywall render")
+@route("!postermywall render", not_allowed_in_parallel=True)
 async def postermywall_render(message: discord.Message, id_: str, changes):
+    print("RENDER")
     template = await postermywall.Template.from_id(id_)
 
     out = discord.Embed(title=f"Custom Template based on `{id_}`", description=f"command: `!postermywall render "
@@ -56,7 +57,7 @@ async def postermywall_render(message: discord.Message, id_: str, changes):
     await message.channel.send(embed=out, file=file)
 
 
-@route("!postermywall attrs")
+@route("!postermywall attrs", not_allowed_in_parallel=True)
 async def postermywall_attrs(message: discord.Message, template_id: str):
     await message.channel.send(embed=await (await postermywall.Template.from_id(template_id)).get_dc_attrs_embed())
 

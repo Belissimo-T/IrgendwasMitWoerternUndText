@@ -9,6 +9,8 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.options import Options
 from hashlib import sha256
 
+import cachelib
+
 chrome_options = Options()
 # MUST BE HEADLESS AND HAVE VERY LARGE WINDOW SIZE
 chrome_options.add_argument("--headless")
@@ -30,11 +32,10 @@ frame = driver.find_element_by_class_name("lr_container").find_elements_by_xpath
 
 
 def get_image(word, ipa, part_of_speech, meaning, example, zoom=3):
-    file = os.path.join("cache", sha256(str((word, ipa, part_of_speech, meaning, example, zoom)).encode())
-                        .hexdigest() + ".png")
-    if os.path.exists(file):
-        with open(file, "rb") as f:
-            return f.read()
+    hash_obj = (word, ipa, part_of_speech, meaning, example, zoom)
+
+    if data := cachelib.get(hash_obj):
+        return data
 
     example = f'"{example}"'
     pad = 5 * zoom
@@ -109,8 +110,7 @@ def get_image(word, ipa, part_of_speech, meaning, example, zoom=3):
 
     out = img_byte_arr.getvalue()
 
-    with open(file, "wb") as f:
-        f.write(out)
+    cachelib.save(out, hash_obj)
 
     return out
 

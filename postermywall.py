@@ -2,6 +2,7 @@ import io
 import json
 from typing import Literal
 
+import msgpack
 import selenium.common.exceptions
 from selenium import webdriver
 from selenium.webdriver import ActionChains
@@ -11,6 +12,8 @@ import httpx
 import asyncio
 
 from selenium.webdriver.common.keys import Keys
+
+import cachelib
 
 chrome_options = Options()
 # MUST BE HEADLESS AND HAVE VERY LARGE WINDOW SIZE
@@ -78,6 +81,12 @@ async def prepare(url: str):
         driver.find_element_by_xpath('//*[@id="user-consent-form"]/div[2]/div[2]/a').click()
     except selenium.common.exceptions.ElementNotInteractableException:
         print("...already accepted")
+
+    print("Pause")
+    try:
+        driver.find_element_by_xpath('//*[@id="seekbar-view"]/button[2]').click()
+    except selenium.common.exceptions.ElementNotInteractableException:
+        print("...Not a video")
 
     print("Running first script...")
     driver.execute_script(set_up)
@@ -164,12 +173,16 @@ class Template:
         return out
 
     async def get_dc_file(self):
-        return discord.File(fp=io.BytesIO((await client.get(self.preview_url)).content),
+        if data := cachelib.get(("preview", self.id_)):
+            ...
+        else:
+            data = (await client.get(self.preview_url)).content
+            cachelib.save(data, ("preview", self.id_))
+
+        return discord.File(fp=io.BytesIO(data),
                             filename=f"{self.id_}.{'jpg' if self.type_ == 'image' else 'mp4'}")
 
     async def get_objects(self) -> list[dict]:
-        await prepare(self.customize_url)
-
         def _get_objects(object: dict, path: list[int] = None):
             path = [] if path is None else path
 
@@ -182,10 +195,18 @@ class Template:
 
             return out
 
+        if objts := cachelib.get(("objects", self.id_)):
+            return _get_objects(msgpack.loads(objts))
+
+        await prepare(self.customize_url)
+
         print("Running second script...")
         object_json = driver.execute_script("return window.hopefullyklass.toJSON();")
 
         print("Finished!")
+
+        cachelib.save(msgpack.dumps(object_json), ("objects", self.id_))
+
         return _get_objects(object_json)
 
     async def get_dc_attrs_embed(self) -> discord.Embed:
@@ -208,21 +229,24 @@ class Template:
         render_update()
 
     async def get_dc_modify_file(self, modifications: list[tuple[list[int], str]]) -> discord.File:
-        zoom_factor = 4
+        if data := cachelib.get(("modify", self.id_, modifications)):
+            ...
+        else:
+            zoom_factor = 4
 
-        print("Resizing window...")
-        driver.set_window_size(1600 * zoom_factor, 900 * zoom_factor)
+            print("Resizing window...")
+            driver.set_window_size(1600 * zoom_factor, 900 * zoom_factor)
 
-        print("Scaling window...")
-        driver.execute_script(f"document.body.style.zoom='{zoom_factor}'")
+            print("Scaling window...")
+            driver.execute_script(f"document.body.style.zoom='{zoom_factor}'")
 
-        await self.modify(modifications)
+            await self.modify(modifications)
 
-        # not needed, it zooms itself
-        # print("Zooming Canvas")
-        # zoom(.7 * zoom_factor)
+            data = screenshot()
 
-        return discord.File(fp=io.BytesIO(screenshot()), filename="image.png")
+            cachelib.save(data, ("modify", self.id_, modifications))
+
+        return discord.File(fp=io.BytesIO(data), filename="image.png")
 
 
 async def search(keyword: str, type_: Literal["all", "image", "video"] = "all", size: str = "all") -> list[Template]:

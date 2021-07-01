@@ -5,3 +5,4 @@ Pillow
 lxml
 discord
 httpx
+msgpack

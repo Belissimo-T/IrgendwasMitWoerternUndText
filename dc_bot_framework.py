@@ -1,3 +1,4 @@
+import asyncio
 import dataclasses
 import random
 from typing import Callable, Union
@@ -6,10 +7,30 @@ import traceback
 import sys
 
 
-def route(alias: str):
+def route(alias: str, not_allowed_in_parallel: bool = False):
     def decorator(func: Callable):
-        commands.append(Command(alias, func))
-        return func
+
+        lock = None
+        if not_allowed_in_parallel:
+            print("Create lock!")
+            lock = asyncio.Lock()
+
+        async def wrapper(*args, **kwargs):
+            if lock:
+                print("Getting lock")
+                await lock.acquire()
+                print("Got lock!")
+
+            print("Call!!!!!")
+            await func(*args, **kwargs)
+
+            if lock:
+                print("Releasing lock")
+                lock.release()
+
+        commands.append(Command(alias, wrapper))
+
+        return wrapper
 
     return decorator
 
@@ -22,8 +43,8 @@ def construct_error_embed(err: str):
                          description=f"{'Oh ' if random.random() > .5 else ''}{random.choice(messages)} Something went "
                                      f"wrong:\n```{err}```"
                                      f"Don't be scared to read the error, most are simple mistakes and "
-                                     f"can be easily resolved! 🧐. Sometimes, trying again 🔁 "
-                                     f"also helps!",
+                                     f"can be easily resolved! 🧐. Sometimes, trying again 🔁 helps! Also make sure to"
+                                     f"not run things in parallel.",
                          color=discord.Color(0xFF0000))
 
 
