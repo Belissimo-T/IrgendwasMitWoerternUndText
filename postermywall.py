@@ -236,14 +236,5 @@ async def search(keyword: str, type_: Literal["all", "image", "video"] = "all", 
     return out
 
 
-async def main():
-    template = await Template.from_id("5892940d8441e482e53b12715c06ee3f")
-    out = await template.get_objects()
-    print(out)
-
-
 with open("client.id", "r") as f:
     CLIENT_ID = f.read()
-
-if __name__ == "__main__":
-    asyncio.run(main())
