@@ -44,10 +44,10 @@ def construct_error_embed(err: str):
     messages = ["Snap!", "Shoot!", "Shucks!", "Shizer!", "Darn!", "Frick!", "Juck!", "Dang!", "Frack!", "Frak!",
                 "Frig!", "Fug!", "F!", "my gosh!"]
     return discord.Embed(title="Error",
-                         description=f"{'Oh ' if random.random() > .5 else ''}{random.choice(messages)} Something went "
+                         description=f"{random.choice(['Oh', 'Aw', ''])}{random.choice(messages)} Something went "
                                      f"wrong:\n```{err}```"
                                      f"Don't be scared to read the error, most are simple mistakes and "
-                                     f"can be easily resolved! 🧐. Sometimes, trying again 🔁 helps! Also make sure to"
+                                     f"can be easily resolved! 🧐. Sometimes, trying again 🔁 helps! Also make sure to "
                                      f"not run things in parallel.",
                          color=discord.Color(0xFF0000))
 
