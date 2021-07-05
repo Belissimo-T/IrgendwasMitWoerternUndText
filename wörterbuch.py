@@ -1,9 +1,12 @@
-import dict_entry_getter
+from selenium.webdriver.chrome.webdriver import WebDriver
+
+import google_dictionary
 
 import pickle
-from typing import Union
 import discord
 from io import BytesIO
+
+import seleniumutil
 
 DICT_PREFIX = "dictionaries/"
 
@@ -13,7 +16,7 @@ def split_word(word: str, chars="·*") -> list[str]:
     for char in word:
         if char in chars:
             out.append("")
-        else:
+        elif char not in "\\":
             out[-1] += char
     return out
 
@@ -54,15 +57,18 @@ class Word:
         return f"!wörterbuch render {self.get_display_name()!r} {self.ipa!r} {self.part_of_speech!r} " \
                f"{self.meaning!r} {self.example!r}"
 
-    def get_dc_file(self, filename: str = "image.png"):
+    async def get_dc_file(self, filename: str = "image.png"):
         display_name = self.get_display_name()
-        bytes_arr = dict_entry_getter.get_image(display_name, self.ipa, self.part_of_speech, self.meaning,
-                                                self.example)
+        bytes_arr = await seleniumutil.run_function(
+            lambda webdriver: google_dictionary.get_image(webdriver,
+                                                          display_name, self.ipa, self.part_of_speech, self.meaning,
+                                                          self.example)
+        )
         stream = BytesIO(bytes_arr)
         return discord.File(stream, filename=filename)
 
-    def get_dc_embed(self, message: str = "") -> tuple[discord.Embed, discord.File]:
-        image = self.get_dc_file("image.png")
+    async def get_dc_embed(self, message: str = "") -> tuple[discord.Embed, discord.File]:
+        image = await self.get_dc_file("image.png")
         display_name = self.get_display_name()
 
         description = (f"{message}\n\n" if message else "") + \
@@ -82,7 +88,7 @@ class Word:
 class Dictionary:
     def __init__(self, name: str, data: dict = None):
         self._name = name
-        self._data = {} if data is None else data
+        self._data: dict[str: Word] = {} if data is None else data
 
         self.save()
 
