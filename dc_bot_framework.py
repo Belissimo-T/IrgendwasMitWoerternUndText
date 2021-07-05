@@ -10,7 +10,7 @@ import sys
 def route(alias: str, only_from: int = None):
     def decorator(func: Callable):
         async def wrapper(client: discord.Client, message: discord.Message, *args, **kwargs):
-            if message.author.id != only_from:
+            if message.author.id != only_from and only_from:
                 only_from_user = await client.fetch_user(only_from)
                 await message.channel.send(embed=construct_unauthorized_embed(message.author, only_from_user),
                                            reference=message)
