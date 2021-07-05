@@ -11,7 +11,7 @@ import seleniumutil
 DICT_PREFIX = "dictionaries/"
 
 
-def split_word(word: str, chars="·*") -> list[str]:
+def split_word(word: str, chars=".·*") -> list[str]:
     out = [""]
     for char in word:
         if char in chars:
