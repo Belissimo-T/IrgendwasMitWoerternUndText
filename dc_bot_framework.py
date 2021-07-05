@@ -7,36 +7,25 @@ import traceback
 import sys
 
 
-def route(alias: str, not_allowed_in_parallel: bool = False):
+def route(alias: str, only_from: int = None):
     def decorator(func: Callable):
-
-        lock = None
-        if not_allowed_in_parallel:
-            print("Create lock!")
-            lock = asyncio.Lock()
-
-        async def wrapper(*args, **kwargs):
-            if lock:
-                print("Getting lock")
-                await lock.acquire()
-                print("Got lock!")
-
-            print("Call!!!!!")
-            try:
-                await func(*args, **kwargs)
-            except Exception as e:
-                lock.release()
-                raise e
-
-            if lock:
-                print("Releasing lock")
-                lock.release()
+        async def wrapper(client: discord.Client, message: discord.Message, *args, **kwargs):
+            if message.author.id != only_from:
+                only_from_user = await client.fetch_user(only_from)
+                await message.channel.send(embed=construct_unauthorized_embed(message.author, only_from_user),
+                                           reference=message)
+            await func(client, message, *args, **kwargs)
 
         commands.append(Command(alias, wrapper))
 
         return wrapper
 
     return decorator
+
+
+def construct_unauthorized_embed(unauthorized_user: discord.User, authorized_user: discord.User):
+    return discord.Embed(title="Unauthorized", color=discord.Color(0xFFA000),
+                         description=f"You ({unauthorized_user}) are not {authorized_user}.")
 
 
 def construct_error_embed(err: str):
@@ -100,7 +89,7 @@ def run():
             print(args)
 
             async with message.channel.typing():
-                await record_command.function(message, *args)
+                await record_command.function(client, message, *args)
 
         except Exception:
             err = traceback.format_exc()
