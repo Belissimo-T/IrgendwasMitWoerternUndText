@@ -21,7 +21,7 @@ def get_image(webdriver: WebDriver, word, ipa, part_of_speech, meaning, example,
     try:
         i_agree = webdriver.find_element_by_xpath('//*[@id="L2AGLb"]')
         i_agree.click()
-    except selenium.common.exceptions.ElementNotInteractableException:
+    except selenium.common.exceptions.NoSuchElementException:
         print("...Already clicked")
 
     print("Find the base dictionary element...")
