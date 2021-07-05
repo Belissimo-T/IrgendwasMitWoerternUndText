@@ -1,7 +1,7 @@
 import io
 from PIL import Image, PngImagePlugin
 from io import BytesIO
-
+import selenium.common.exceptions
 from selenium.webdriver import ActionChains
 from selenium.webdriver.chrome.webdriver import WebDriver
 
@@ -18,8 +18,11 @@ def get_image(webdriver: WebDriver, word, ipa, part_of_speech, meaning, example,
     webdriver.get("https://www.google.de/search?q=laufen+definition")
 
     print("Click on the agree button...")
-    i_agree = webdriver.find_element_by_xpath('//*[@id="L2AGLb"]')
-    i_agree.click()
+    try:
+        i_agree = webdriver.find_element_by_xpath('//*[@id="L2AGLb"]')
+        i_agree.click()
+    except selenium.common.exceptions.ElementNotInteractableException:
+        print("...Already clicked")
 
     print("Find the base dictionary element...")
     frame = webdriver.find_element_by_class_name("lr_container").find_elements_by_xpath("./*")[2]
