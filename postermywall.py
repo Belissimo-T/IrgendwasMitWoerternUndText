@@ -1,26 +1,17 @@
+import asyncio
 import io
-import json
+import time
 from typing import Literal
-
-import msgpack
-import selenium.common.exceptions
-from selenium import webdriver
-from selenium.webdriver import ActionChains
-from selenium.webdriver.chrome.options import Options
 import discord
 import httpx
-import asyncio
-
+import msgpack
+import selenium.common.exceptions
+from selenium.webdriver import ActionChains
+from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.keys import Keys
 
 import cachelib
-
-chrome_options = Options()
-# MUST BE HEADLESS AND HAVE VERY LARGE WINDOW SIZE
-# chrome_options.add_argument("--headless")
-
-print("Creating browser...")
-driver = webdriver.Chrome(options=chrome_options)
+import seleniumutil
 
 size_options = ["all", "poster", "a1", "a2", "a3", "a4", "album-cover", "banner-2-6", "banner-2-8", "banner-4-6",
                 "business-card", "desktop-wallpaper", "desktop-wallpaper-inverted", "etsy-banner", "facebook-ad",
@@ -35,14 +26,15 @@ size_options = ["all", "poster", "a1", "a2", "a3", "a4", "album-cover", "banner-
 client = httpx.AsyncClient()
 
 
-def render_update():
+def render_update(webdriver: WebDriver):
     print("Invoking renderAll")
-    ActionChains(driver).key_down(Keys.CONTROL).send_keys('-').key_up(Keys.CONTROL).perform()
-    ActionChains(driver).key_down(Keys.CONTROL).send_keys('+').key_up(Keys.CONTROL).perform()
+    ActionChains(webdriver).key_down(Keys.CONTROL).send_keys('-').key_up(Keys.CONTROL).perform()
+    time.sleep(1)
+    ActionChains(webdriver).key_down(Keys.CONTROL).send_keys('+').key_up(Keys.CONTROL).perform()
 
 
-def zoom(target: float = 100) -> int:
-    el = driver.find_element_by_xpath('// *[ @ id = "poster-nav-view"] / div')
+def zoom(webdriver: WebDriver, target: float = 100) -> int:
+    el = webdriver.find_element_by_xpath('// *[ @ id = "poster-nav-view"] / div')
 
     d = target - int(el.get_attribute('innerHTML')[:-1])
 
@@ -53,16 +45,16 @@ def zoom(target: float = 100) -> int:
             return current
 
         if dnew < 0:
-            ActionChains(driver).key_down(Keys.CONTROL).send_keys('-').key_up(Keys.CONTROL).perform()
+            ActionChains(webdriver).key_down(Keys.CONTROL).send_keys('-').key_up(Keys.CONTROL).perform()
         elif dnew > 0:
-            ActionChains(driver).key_down(Keys.CONTROL).send_keys('+').key_up(Keys.CONTROL).perform()
+            ActionChains(webdriver).key_down(Keys.CONTROL).send_keys('+').key_up(Keys.CONTROL).perform()
         else:
             return current
 
 
-async def prepare(url: str):
+async def prepare(webdriver: WebDriver, url: str):
     print("Getting website...")
-    driver.get(url)
+    webdriver.get(url)
 
     set_up = """
     a = function() {
@@ -78,30 +70,30 @@ async def prepare(url: str):
 
     print("Click on the cookie-accept banner...")
     try:
-        driver.find_element_by_xpath('//*[@id="user-consent-form"]/div[2]/div[2]/a').click()
+        webdriver.find_element_by_xpath('//*[@id="user-consent-form"]/div[2]/div[2]/a').click()
     except selenium.common.exceptions.ElementNotInteractableException:
         print("...already accepted")
 
     print("Pause")
     try:
-        driver.find_element_by_xpath('//*[@id="seekbar-view"]/button[2]').click()
+        webdriver.find_element_by_xpath('//*[@id="seekbar-view"]/button[2]').click()
     except selenium.common.exceptions.ElementNotInteractableException:
         print("...Not a video")
 
     print("Running first script...")
-    driver.execute_script(set_up)
+    webdriver.execute_script(set_up)
 
-    render_update()
+    render_update(webdriver)
 
     for _ in range(20):
         try:
-            driver.execute_script("return window.hopefullyklass.toJSON();")
+            webdriver.execute_script("return window.hopefullyklass.toJSON();")
             return
         except selenium.common.exceptions.JavascriptException as e:
             print(e)
 
             print("Render update...")
-            render_update()
+            render_update(webdriver)
 
             print("Waiting...")
             await asyncio.sleep(2)
@@ -109,9 +101,9 @@ async def prepare(url: str):
         raise Exception("Could not get the Canvas object. Tried 20 times. Aborting.")
 
 
-def screenshot() -> bytes:
-    zoom(100)
-    return driver.find_element_by_id("whiteboard").screenshot_as_png
+def screenshot(webdriver: WebDriver) -> bytes:
+    zoom(webdriver, 100)
+    return webdriver.find_element_by_id("whiteboard").screenshot_as_png
 
 
 def format_obj(obj: dict):
@@ -182,26 +174,26 @@ class Template:
         return discord.File(fp=io.BytesIO(data),
                             filename=f"{self.id_}.{'jpg' if self.type_ == 'image' else 'mp4'}")
 
-    async def get_objects(self) -> list[dict]:
-        def _get_objects(object: dict, path: list[int] = None):
+    async def get_objects(self, webdriver: WebDriver) -> list[dict]:
+        def _get_objects(object_: dict, path: list[int] = None):
             path = [] if path is None else path
 
-            if "objects" not in object:
-                return [(path, object)]
+            if "objects" not in object_:
+                return [(path, object_)]
 
             out = []
-            for i, object in enumerate(object["objects"]):
-                out += _get_objects(object, path + [i])
+            for i, object_ in enumerate(object_["objects"]):
+                out += _get_objects(object_, path + [i])
 
             return out
 
         if objts := cachelib.get(("objects", self.id_)):
             return _get_objects(msgpack.loads(objts))
 
-        await prepare(self.customize_url)
+        await prepare(webdriver, self.customize_url)
 
         print("Running second script...")
-        object_json = driver.execute_script("return window.hopefullyklass.toJSON();")
+        object_json = webdriver.execute_script("return window.hopefullyklass.toJSON();")
 
         print("Finished!")
 
@@ -210,39 +202,36 @@ class Template:
         return _get_objects(object_json)
 
     async def get_dc_attrs_embed(self) -> discord.Embed:
+        objects = await seleniumutil.run_function(lambda webdriver: asyncio.run(self.get_objects(webdriver)))
         out = discord.Embed(title=f"Attributes of `{self.id_}`",
-                            description="\n".join([format_obj(obj) for obj in await self.get_objects()
+                            description="\n".join([format_obj(obj) for obj in objects
                                                    if "text" in obj[1]]))
 
         out.set_image(url=self.preview_url)
         out.set_thumbnail(url=self.thumb_url)
         return out
 
-    async def modify(self, modifications: list[tuple[list[int], str]]):
-        await prepare(self.customize_url)
+    async def modify(self, webdriver: WebDriver, modifications: list[tuple[list[int], str]]):
+        await prepare(webdriver, self.customize_url)
 
         for path, mod in modifications:
             modstr = f"window.hopefullyklass{''.join([f'._objects[{i}]' for i in path])}.setText({mod!r})"
             print(modstr)
-            driver.execute_script(modstr)
+            webdriver.execute_script(modstr)
 
-        render_update()
+        render_update(webdriver)
+
+    async def _get_modify_data(self, webdriver: WebDriver, modifications: list[tuple[list[int], str]]):
+        await self.modify(webdriver, modifications)
+
+        return screenshot(webdriver)
 
     async def get_dc_modify_file(self, modifications: list[tuple[list[int], str]]) -> discord.File:
         if data := cachelib.get(("modify", self.id_, modifications)):
             ...
         else:
-            zoom_factor = 4
-
-            print("Resizing window...")
-            driver.set_window_size(1600 * zoom_factor, 900 * zoom_factor)
-
-            print("Scaling window...")
-            driver.execute_script(f"document.body.style.zoom='{zoom_factor}'")
-
-            await self.modify(modifications)
-
-            data = screenshot()
+            data = await seleniumutil.run_function(
+                lambda webdriver: asyncio.run(self._get_modify_data(webdriver, modifications)), scale=4)
 
             cachelib.save(data, ("modify", self.id_, modifications))
 
@@ -252,7 +241,6 @@ class Template:
 async def search(keyword: str, type_: Literal["all", "image", "video"] = "all", size: str = "all") -> list[Template]:
     response = await client.get(f"https://api.postermywall.com/v1/templates?client_id={CLIENT_ID}&keyword={keyword}&"
                                 f"type={type_}&size={size}")
-    print(response.json())
     out = []
     for search_result in response.json():
         out.append(Template.from_dict(search_result))
