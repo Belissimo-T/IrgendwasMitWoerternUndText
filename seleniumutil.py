@@ -1,13 +1,12 @@
 from typing import Callable
 import asyncio
-from concurrent.futures.thread import ThreadPoolExecutor as Pool
 from asgiref.sync import sync_to_async
-
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.webdriver import WebDriver
 
+from context_logger.context_logger import log
 
-print("Creating browser...")
+log("Creating browser...")
 chrome_options = Options()
 chrome_options.add_argument("--headless")
 driver = WebDriver(options=chrome_options)
@@ -21,12 +20,12 @@ def zoom(webdriver: WebDriver, factor: float):
 
 def _execute(webdriver: WebDriver, func: Callable, size: tuple[int, int] = (1600, 900), scale: float = 1):
     # set window size
-    print("Setting window size")
+    log("Setting window size")
     width, height = size
     webdriver.set_window_size(width, height)
 
     # set scale
-    print("Scaling...")
+    log("Scaling")
     webdriver.execute_script(f"document.body.style.zoom='{scale}'")
 
     # call function
@@ -34,7 +33,7 @@ def _execute(webdriver: WebDriver, func: Callable, size: tuple[int, int] = (1600
 
 
 async def run_function(func: Callable, size: tuple[int, int] = (1600, 900), scale: float = 1):
-    print("Waiting for lock...")
+    log("Aquiring browser lock")
     async with browser_lock:
-        print("Starting async thread selenium")
+        log("Starting async selenium thread")
         return await sync_to_async(_execute)(driver, func, size, scale)

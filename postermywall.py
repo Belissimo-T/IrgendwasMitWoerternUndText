@@ -13,6 +13,8 @@ from selenium.webdriver.common.keys import Keys
 import cachelib
 import seleniumutil
 
+from context_logger.context_logger import log, log_decorator
+
 size_options = ["all", "poster", "a1", "a2", "a3", "a4", "album-cover", "banner-2-6", "banner-2-8", "banner-4-6",
                 "business-card", "desktop-wallpaper", "desktop-wallpaper-inverted", "etsy-banner", "facebook-ad",
                 "facebook-cover", "facebook-cover-video", "facebook-shared-image", "flyer-letter", "google-cover",
@@ -26,11 +28,14 @@ size_options = ["all", "poster", "a1", "a2", "a3", "a4", "album-cover", "banner-
 client = httpx.AsyncClient()
 
 
+@log_decorator("Invoking renderAll js method")
 def render_update(webdriver: WebDriver):
-    print("Invoking renderAll")
-    ActionChains(webdriver).key_down(Keys.CONTROL).send_keys('-').key_up(Keys.CONTROL).perform()
-    time.sleep(1)
-    ActionChains(webdriver).key_down(Keys.CONTROL).send_keys('+').key_up(Keys.CONTROL).perform()
+    with log("Zooming out"):
+        ActionChains(webdriver).key_down(Keys.CONTROL).send_keys('-').key_up(Keys.CONTROL).perform()
+    with log("Sleeping 1s"):
+        time.sleep(1)
+    with log("Zooming in"):
+        ActionChains(webdriver).key_down(Keys.CONTROL).send_keys('+').key_up(Keys.CONTROL).perform()
 
 
 def zoom(webdriver: WebDriver, target: float = 100) -> int:
@@ -52,9 +57,10 @@ def zoom(webdriver: WebDriver, target: float = 100) -> int:
             return current
 
 
+@log_decorator(lambda args: f"Preparing website {args['url']}")
 async def prepare(webdriver: WebDriver, url: str):
-    print("Getting website...")
-    webdriver.get(url)
+    with log("Getting website"):
+        webdriver.get(url)
 
     set_up = """
     a = function() {
@@ -65,42 +71,48 @@ async def prepare(webdriver: WebDriver, url: str):
     fabric.Canvas.prototype.renderAll = a
     """
 
-    print("Waiting...")
+    log("Waiting")
     await asyncio.sleep(5)
 
-    print("Click on the cookie-accept banner...")
-    try:
-        webdriver.find_element_by_xpath('//*[@id="user-consent-form"]/div[2]/div[2]/a').click()
-    except selenium.common.exceptions.ElementNotInteractableException:
-        print("...already accepted")
+    with log("Clicking on the cookie-accept banner"):
+        try:
+            webdriver.find_element_by_xpath('//*[@id="user-consent-form"]/div[2]/div[2]/a').click()
+            log("success ✅")
+        except selenium.common.exceptions.ElementNotInteractableException:
+            log("already accepted 😐")
 
-    print("Pause")
-    try:
-        webdriver.find_element_by_xpath('//*[@id="seekbar-view"]/button[2]').click()
-    except selenium.common.exceptions.ElementNotInteractableException:
-        print("...Not a video")
+    with log("Pausing"):
+        try:
+            webdriver.find_element_by_xpath('//*[@id="seekbar-view"]/button[2]').click()
+            log("success ✅")
+        except selenium.common.exceptions.ElementNotInteractableException:
+            log("not a video 😐")
 
-    print("Running first script...")
-    webdriver.execute_script(set_up)
+    with log("Running first script"):
+        webdriver.execute_script(set_up)
 
     render_update(webdriver)
 
-    for _ in range(20):
-        try:
-            webdriver.execute_script("return window.hopefullyklass.toJSON();")
-            return
-        except selenium.common.exceptions.JavascriptException as e:
-            print(e)
+    maxtries = 20
+    with log("Checking if method worked"):
+        for try_ in range(maxtries):
+            with log(f"Try: {try_}/{maxtries}"):
+                try:
+                    webdriver.execute_script("return window.hopefullyklass.toJSON();")
+                    log("success ✅")
+                    return
+                except selenium.common.exceptions.JavascriptException as e:
+                    log(f"didn't work 😢")
 
-            print("Render update...")
-            render_update(webdriver)
+                    render_update(webdriver)
 
-            print("Waiting...")
-            await asyncio.sleep(2)
-    else:
-        raise Exception("Could not get the Canvas object. Tried 20 times. Aborting.")
+                    print("Waiting")
+                    await asyncio.sleep(2)
+        else:
+            raise Exception("Could not get the Canvas object. Tried 20 times. Aborting.")
 
 
+@log_decorator("Screenshotting")
 def screenshot(webdriver: WebDriver) -> bytes:
     zoom(webdriver, 100)
     return webdriver.find_element_by_id("whiteboard").screenshot_as_png
@@ -192,10 +204,10 @@ class Template:
 
         await prepare(webdriver, self.customize_url)
 
-        print("Running second script...")
-        object_json = webdriver.execute_script("return window.hopefullyklass.toJSON();")
+        with log("Getting canvas object"):
+            object_json = webdriver.execute_script("return window.hopefullyklass.toJSON();")
 
-        print("Finished!")
+        log("Finished!")
 
         cachelib.save(msgpack.dumps(object_json), ("objects", self.id_))
 
@@ -211,13 +223,16 @@ class Template:
         out.set_thumbnail(url=self.thumb_url)
         return out
 
+    @log_decorator("Modifying")
     async def modify(self, webdriver: WebDriver, modifications: list[tuple[list[int], str]]):
         await prepare(webdriver, self.customize_url)
 
-        for path, mod in modifications:
-            modstr = f"window.hopefullyklass{''.join([f'._objects[{i}]' for i in path])}.setText({mod!r})"
-            print(modstr)
-            webdriver.execute_script(modstr)
+        with log("Modifying"):
+            for path, mod in modifications:
+                with log(f"{path!r}: {mod!r}"):
+                    modstr = f"window.hopefullyklass{''.join([f'._objects[{i}]' for i in path])}.setText({mod!r})"
+                    log(modstr)
+                    webdriver.execute_script(modstr)
 
         render_update(webdriver)
 

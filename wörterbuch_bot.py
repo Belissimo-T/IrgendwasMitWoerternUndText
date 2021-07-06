@@ -49,7 +49,7 @@ async def testest(client: discord.Client, message: discord.Message, echo: str = 
         await message.channel.send(echo)
 
 
-@route("!postermywall render")
+@route("!postermywall render", do_log=True)
 async def postermywall_render(client: discord.Client, message: discord.Message, id_: str, changes):
     template = await pmw.Template.from_id(id_)
 
