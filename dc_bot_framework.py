@@ -42,7 +42,7 @@ class Log:
         self.log_list = []
         self.loop = True
 
-        self.log_message = await message.channel.send(embed=self.get_log_embed())
+        self.log_message = await message.channel.send(embed=self.get_log_embed(), reference=message)
 
         asyncio.create_task(self.mainloop())
 

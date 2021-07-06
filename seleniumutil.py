@@ -35,5 +35,5 @@ def _execute(webdriver: WebDriver, func: Callable, size: tuple[int, int] = (1600
 async def run_function(func: Callable, size: tuple[int, int] = (1600, 900), scale: float = 1):
     log("Aquiring browser lock")
     async with browser_lock:
-        log("Starting async selenium thread")
-        return await sync_to_async(_execute)(driver, func, size, scale)
+        with log("Starting async selenium thread"):
+            return await sync_to_async(_execute)(driver, func, size, scale)
