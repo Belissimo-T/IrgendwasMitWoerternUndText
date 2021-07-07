@@ -7,6 +7,7 @@ import discord
 from io import BytesIO
 
 import seleniumutil
+from context_logger.context_logger import log_decorator
 
 DICT_PREFIX = "dictionaries/"
 
@@ -57,6 +58,7 @@ class Word:
         return f"!wörterbuch render {self.get_display_name()!r} {self.ipa!r} {self.part_of_speech!r} " \
                f"{self.meaning!r} {self.example!r}"
 
+    @log_decorator("Getting DC File")
     async def get_dc_file(self, filename: str = "image.png"):
         display_name = self.get_display_name()
         bytes_arr = await seleniumutil.run_function(
@@ -67,6 +69,7 @@ class Word:
         stream = BytesIO(bytes_arr)
         return discord.File(stream, filename=filename)
 
+    @log_decorator("Getting DC Embed")
     async def get_dc_embed(self, message: str = "") -> tuple[discord.Embed, discord.File]:
         image = await self.get_dc_file("image.png")
         display_name = self.get_display_name()

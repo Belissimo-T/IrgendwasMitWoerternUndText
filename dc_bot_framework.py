@@ -53,6 +53,7 @@ class Log:
 
     def log(self, message: str, prefix: str, indentation: int):
         msg = prefix + ": " + (" " * indentation) + message
+        print(msg)
         self.log_list.append(msg)
 
     async def mainloop(self):
@@ -61,11 +62,13 @@ class Log:
             if last != self.log_list:
                 await self.log_message.edit(embed=self.get_log_embed())
                 last = self.log_list.copy()
-            await asyncio.sleep(.1)
+            else:
+                await asyncio.sleep(.1)
 
     async def close(self):
         self.loop = False
-        await self.log_message.edit(content="Auto deleted after 2 min", delete_after=2 * 60)
+        self.log("Closing (the end)", "", 0)
+        await self.log_message.edit(content="Auto deleted after 2 min", delete_after=2 * 60, embed=self.get_log_embed())
 
 
 def construct_unauthorized_embed(unauthorized_user: discord.User, authorized_user: discord.User):
@@ -142,7 +145,7 @@ def run():
                 log(f"Parsed args: {args!r}")
 
                 async with message.channel.typing():
-                    with Logger("Running command"):
+                    with log("Running command"):
                         await record_command.function(client, message, *args)
                     log("Finished!")
         except Exception:

@@ -60,7 +60,7 @@ async def postermywall_render(client: discord.Client, message: discord.Message, 
     await message.channel.send(embed=out, file=file)
 
 
-@route("!postermywall attrs")
+@route("!postermywall attrs", do_log=True)
 async def postermywall_attrs(client: discord.Client, message: discord.Message, template_id: str):
     template = await pmw.Template.from_id(template_id)
     await message.channel.send(embed=await template.get_dc_attrs_embed())
@@ -154,7 +154,7 @@ async def wb_render_help(client: discord.Client, message: discord.Message):
     await message.channel.send(embed=get_wb_help("render"))
 
 
-@route("!wörterbuch render")
+@route("!wörterbuch render", do_log=True)
 async def wb_render(client: discord.Client, message: discord.Message, word_, ipa, part_of_speech, meaning, example):
     word = wörterbuch.Word(wörterbuch.split_word(word_, "·*"), ipa, part_of_speech,
                            meaning, example)
