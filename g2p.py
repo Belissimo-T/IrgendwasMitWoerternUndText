@@ -13,12 +13,17 @@ def save_cache():
     with open("cache.dat", "wb") as f:
         pickle.dump(cache, f)
 
+
 if not os.path.exists("cache.dat"):
     cache = {}
     save_cache()
 
-with open("cache.dat", "rb") as f:
-    cache = pickle.load(f)
+else:
+    with open("cache.dat", "rb") as f:
+        cache = pickle.load(f)
+
+        # cache migration code
+        cache = {element: " ".join(cache[element]) for element in cache}
 
 
 def strip_accents(s):
@@ -26,10 +31,14 @@ def strip_accents(s):
                    if unicodedata.category(c) != 'Mn')
 
 
+def process_response(response: str) -> list[str]:
+    return response.replace("?", "ʔ").split(" ")
+
+
 def g2p(word, lng):
     query = (word, lng)
     if query in cache:
-        return cache[query]
+        return process_response(cache[query])
 
     multiple_files = [
         ('i', ('text.txt', BytesIO(word.encode()))),
@@ -44,13 +53,15 @@ def g2p(word, lng):
     assert parsed_html.body.find('success').text == "true", f"Something went wrong: {parsed_html}"
     download_link = parsed_html.body.find('downloadlink').text
 
-    out = requests.get(download_link).content.decode("utf-8").split(" ")
-    cache.update({query: out})
+    outstr = requests.get(download_link).content.decode("utf-8")
+
+    cache.update({query: outstr})
     save_cache()
-    return out
+
+    return process_response(outstr)
 
 
-VOWELS = "eiyɨʉɯuɪʏʊeøɘɵɤoeøəɤoɛœɜɞʌɔæɐaɶaɑɒ"  # taken from wikipedia, no guarantee to be accurate
+VOWELS = "ɯəʏuʌɑʉyɤɞɪøɒoʊɵeɔœiaɶɨɜæɛɐɘ"  # taken from wikipedia, no guarantee to be accurate
 
 
 # Hal lo
