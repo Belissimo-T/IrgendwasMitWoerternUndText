@@ -66,7 +66,7 @@ async def postermywall_attrs(client: discord.Client, message: discord.Message, t
     await message.channel.send(embed=await template.get_dc_attrs_embed())
 
 
-@route("!postermywall search")
+@route("!postermywall search", do_log=True)
 async def postermywall_search(client: discord.Client, message: discord.Message, search_str: str,
                               type_: Literal["all", "image", "video"] = "all", size: str = "all"):
     await asyncio.gather(*[message.channel.send("temporary message, gets auto-deleted after 2 min.",

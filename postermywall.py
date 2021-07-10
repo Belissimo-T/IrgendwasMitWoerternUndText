@@ -2,6 +2,7 @@ import asyncio
 import io
 import time
 from typing import Literal
+
 import discord
 import httpx
 import msgpack
@@ -11,9 +12,9 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.keys import Keys
 
 import cachelib
+import dc_bot_framework
 import seleniumutil
-
-from context_logger.context_logger import log, log_decorator
+from context_logger.context_logger import Logger, log, log_decorator
 
 size_options = ["all", "poster", "a1", "a2", "a3", "a4", "album-cover", "banner-2-6", "banner-2-8", "banner-4-6",
                 "business-card", "desktop-wallpaper", "desktop-wallpaper-inverted", "etsy-banner", "facebook-ad",
@@ -174,17 +175,26 @@ class Template:
         if self.type_ == "image":
             out.set_image(url=self.preview_url)
             out.set_thumbnail(url=self.thumb_url)
+        else:
+            out.set_image(url="attachment://image.png")
         return out
 
     async def get_dc_file(self):
-        if data := cachelib.get(("preview", self.id_)):
-            ...
-        else:
-            data = (await client.get(self.preview_url)).content
-            cachelib.save(data, ("preview", self.id_))
+        if self.type_ == "image":
+            if data := cachelib.get(("preview", self.id_)):
+                ...
+            else:
+                data = (await client.get(self.preview_url)).content
+                cachelib.save(data, ("preview", self.id_))
 
-        return discord.File(fp=io.BytesIO(data),
-                            filename=f"{self.id_}.{'jpg' if self.type_ == 'image' else 'mp4'}")
+            return discord.File(fp=io.BytesIO(data),
+                                filename=f"{self.id_}.{'jpg' if self.type_ == 'image' else 'mp4'}")
+        else:
+            log_ = await dc_bot_framework.Log.create(message=None)
+            with Logger("mesage", log_function=log_.log):
+                file = await self.get_dc_modify_file([])
+            await log_.close()
+            return file
 
     async def get_objects(self, webdriver: WebDriver) -> list[dict]:
         def _get_objects(object_: dict, path: list[int] = None):
@@ -219,8 +229,12 @@ class Template:
                             description="\n".join([format_obj(obj) for obj in objects
                                                    if "text" in obj[1]]))
 
-        out.set_image(url=self.preview_url)
-        out.set_thumbnail(url=self.thumb_url)
+        if self.type_ == "image":
+            out.set_image(url=self.preview_url)
+            out.set_thumbnail(url=self.thumb_url)
+        else:
+            out.set_image(url="attachment://image.png")
+
         return out
 
     @log_decorator("Modifying")

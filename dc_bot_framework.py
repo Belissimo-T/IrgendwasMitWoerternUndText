@@ -39,7 +39,7 @@ class Log:
     async def create(cls, message: discord.Message):
         self = cls()
         self.message = message
-        self.log_list = []
+        self.log_list = [" "]
         self.loop = True
 
         self.log_message = await message.channel.send(embed=self.get_log_embed(), reference=message)
