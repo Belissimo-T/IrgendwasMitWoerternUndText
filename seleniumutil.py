@@ -51,7 +51,7 @@ wbq: Union[WebBrowserQueue, None] = None
 def prepare():
     global wbq
     if wbq is None:
-        wbq = WebBrowserQueue(3)
+        wbq = WebBrowserQueue(2)
 
 
 # warten bis irgendein browser thread das lock löst
