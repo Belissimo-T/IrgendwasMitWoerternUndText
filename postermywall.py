@@ -14,7 +14,9 @@ from selenium.webdriver.common.keys import Keys
 import cachelib
 import dc_bot_framework
 import seleniumutil
-from context_logger.context_logger import Logger, log, log_decorator
+from context_logger.context_logger import Logger, get_current_logger, log, log_decorator
+
+seleniumutil.prepare()
 
 size_options = ["all", "poster", "a1", "a2", "a3", "a4", "album-cover", "banner-2-6", "banner-2-8", "banner-4-6",
                 "business-card", "desktop-wallpaper", "desktop-wallpaper-inverted", "etsy-banner", "facebook-ad",
@@ -179,7 +181,7 @@ class Template:
             out.set_image(url="attachment://image.png")
         return out
 
-    async def get_dc_file(self):
+    async def get_dc_file(self, message: discord.Message):
         if self.type_ == "image":
             if data := cachelib.get(("preview", self.id_)):
                 ...
@@ -190,10 +192,10 @@ class Template:
             return discord.File(fp=io.BytesIO(data),
                                 filename=f"{self.id_}.{'jpg' if self.type_ == 'image' else 'mp4'}")
         else:
-            log_ = await dc_bot_framework.Log.create(message=None)
-            with Logger("mesage", log_function=log_.log):
+            log_ = await dc_bot_framework.Log.create(message=message)
+            with Logger(get_current_logger().prefix + "_", log_function=log_.log):
                 file = await self.get_dc_modify_file([])
-            await log_.close()
+            await log_.close(delete_after=10)
             return file
 
     async def get_objects(self, webdriver: WebDriver) -> list[dict]:
@@ -225,7 +227,7 @@ class Template:
 
     async def get_dc_attrs_embed(self) -> discord.Embed:
         objects = await seleniumutil.run_function(lambda webdriver: asyncio.run(self.get_objects(webdriver)))
-        out = discord.Embed(title=f"Attributes of `{self.id_}`",
+        out = discord.Embed(title=f"Attributes of `{self.id_}` ({self.name})",
                             description="\n".join([format_obj(obj) for obj in objects
                                                    if "text" in obj[1]]))
 

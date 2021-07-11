@@ -1,14 +1,16 @@
 import asyncio
 import io
 import os
-import discord
 from typing import Literal
 
+import discord
+
+import g2p
+import postermywall
 import postermywall as pmw
 import wörterbuch
-import g2p
 from dc_bot_framework import route, run
-from zitat import get_zitat, get_image
+from zitat import get_image, get_zitat
 
 if not os.path.exists("dictionaries/global.dict"):
     dictionary = wörterbuch.Dictionary("global")
@@ -63,15 +65,19 @@ async def postermywall_render(client: discord.Client, message: discord.Message, 
 @route("!postermywall attrs", do_log=True)
 async def postermywall_attrs(client: discord.Client, message: discord.Message, template_id: str):
     template = await pmw.Template.from_id(template_id)
-    await message.channel.send(embed=await template.get_dc_attrs_embed())
+    await message.channel.send(embed=await template.get_dc_attrs_embed(), file=await template.get_dc_file(message))
 
 
-@route("!postermywall search", do_log=True)
+async def send_template(message: discord.Message, template: postermywall.Template):
+    await message.channel.send("temporary message, gets auto-deleted after 2 min.",
+                               embed=template.get_dc_embed(), delete_after=2 * 60,
+                               file=await template.get_dc_file(message=message))
+
+
+@route("!postermywall search")
 async def postermywall_search(client: discord.Client, message: discord.Message, search_str: str,
                               type_: Literal["all", "image", "video"] = "all", size: str = "all"):
-    await asyncio.gather(*[message.channel.send("temporary message, gets auto-deleted after 2 min.",
-                                                embed=template.get_dc_embed(), delete_after=2 * 60,
-                                                file=await template.get_dc_file()) for template in
+    await asyncio.gather(*[send_template(message, template) for template in
                            await pmw.search(search_str, type_, size)])
 
 
@@ -125,7 +131,6 @@ async def getmsg(client: discord.Client, message: discord.Message, id_: str):
 #     await message.channel.send("!wörterbuch help")
 #     await message.channel.send("!wörterbuch fullhelp help")
 #     await message.channel.send("!g2p help")
-
 
 @route("!wörterbuch help")
 @route("!wörterbuch")
@@ -293,7 +298,8 @@ async def g2p_(client: discord.Client, message: discord.Message, _word, lang):
 
     _, predicted_text_syllables = g2p.get_syllables(phonemes, _word)
     # print(predicted_text_syllables, predicted_phoneme_syllables)
-    word = wörterbuch.Word(predicted_text_syllables, "".join(phonemes).replace("+", "").replace("_", ""), "", "", "", True)
+    word = wörterbuch.Word(predicted_text_syllables, "".join(phonemes).replace("+", "").replace("_", ""), "", "",
+                           "", True)
 
     description = f"word: `{word.get_display_name()}`" \
                   f"\nipa: `{word.ipa}`\n"

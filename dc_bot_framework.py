@@ -1,10 +1,12 @@
 import asyncio
 import dataclasses
 import random
-from typing import Callable, Union
-import discord
-import traceback
 import sys
+import traceback
+from asyncio import Event
+from typing import Callable, Union
+
+import discord
 
 from context_logger.context_logger import Logger, log
 
@@ -22,7 +24,8 @@ def route(alias: str, only_from: int = None, do_log: bool = False):
                     await func(client, message, *args, **kwargs)
                 await log_object.close()
             else:
-                await func(client, message, *args, **kwargs)
+                with Logger(f"{message_number[0]}"):
+                    await func(client, message, *args, **kwargs)
 
         commands.append(Command(alias, wrapper))
 
@@ -34,6 +37,7 @@ def route(alias: str, only_from: int = None, do_log: bool = False):
 class Log:
     log_list: list[str]
     log_message: discord.Message
+    event: Event
 
     @classmethod
     async def create(cls, message: discord.Message):
@@ -43,6 +47,8 @@ class Log:
         self.loop = True
 
         self.log_message = await message.channel.send(embed=self.get_log_embed(), reference=message)
+
+        self.event = Event()
 
         asyncio.create_task(self.mainloop())
 
@@ -55,20 +61,18 @@ class Log:
         msg = prefix + ": " + (" " * indentation) + message
         print(msg)
         self.log_list.append(msg)
+        self.event.set()
 
     async def mainloop(self):
-        last = []
         while self.loop:
-            if last != self.log_list:
-                await self.log_message.edit(embed=self.get_log_embed())
-                last = self.log_list.copy()
-            else:
-                await asyncio.sleep(.1)
+            await self.event.wait()
+            await self.log_message.edit(embed=self.get_log_embed())
 
-    async def close(self):
+    async def close(self, delete_after: int = 2 * 60):
         self.loop = False
         self.log("Closing (the end)", "", 0)
-        await self.log_message.edit(content="Auto deleted after 2 min", delete_after=2 * 60, embed=self.get_log_embed())
+        await self.log_message.edit(content=f"Gets auto deleted after {delete_after} s.", delete_after=delete_after,
+                                    embed=self.get_log_embed())
 
 
 def construct_unauthorized_embed(unauthorized_user: discord.User, authorized_user: discord.User):

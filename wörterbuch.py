@@ -11,6 +11,7 @@ from context_logger.context_logger import log_decorator
 
 DICT_PREFIX = "dictionaries/"
 
+seleniumutil.prepare()
 
 def split_word(word: str, chars=".·*") -> list[str]:
     out = [""]
