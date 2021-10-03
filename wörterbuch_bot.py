@@ -22,7 +22,7 @@ ESCAPED_CHARS = "`~_()[]*<>"
 
 def get_wb_help(name: str):
     help_embed = discord.Embed(title=f"Usage of `!wörterbuch {name}`",
-                               description="Usage: `!wörterbuch add <word> <ipa> <part_of_speech> "
+                               description=f"Usage: `!wörterbuch {name} <word> <ipa> <part_of_speech> "
                                            f"<meaning> <example> `\n\nExample: ```!wörterbuch {name} \"rein·joi·nen\" "
                                            "\"ˈraɪndʒɔɪnən\" \"Verb\" \"einen Internetanruf oder eine "
                                            "Videospielsession betreten\" \"Ahh! Er ist wieder reingejoined.\"```",
