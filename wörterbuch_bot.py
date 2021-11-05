@@ -161,7 +161,7 @@ async def wb_render_help(client: discord.Client, message: discord.Message):
 
 @route("!wörterbuch render", do_log=True)
 async def wb_render(client: discord.Client, message: discord.Message, word_, ipa, part_of_speech, meaning, example):
-    word = wörterbuch.Word(wörterbuch.split_word(word_, "·*"), ipa, part_of_speech,
+    word = wörterbuch.Word(wörterbuch.split_word(word_), ipa, part_of_speech,
                            meaning, example)
 
     embed, file = await word.get_dc_embed()
@@ -175,7 +175,7 @@ async def wb_add_help(client: discord.Client, message: discord.Message):
 
 @route("!wörterbuch add")
 async def wb_add(client: discord.Client, message: discord.Message, word_, ipa, part_of_speech, meaning, example):
-    word = wörterbuch.Word(wörterbuch.split_word(word_, "·*"), ipa, part_of_speech,
+    word = wörterbuch.Word(wörterbuch.split_word(word_), ipa, part_of_speech,
                            meaning, example)
 
     dictionary.add_word(word)
