@@ -226,8 +226,12 @@ async def wb_list(client: discord.Client, message: discord.Message):
                                embed=discord.Embed(title="Wörterbuch Listing",
                                                    description=f"total word count: `{len(dictionary)}`"),
                                delete_after=2 * 60)
-
-    for word in dictionary:
+    
+    words = list(dictionary)
+    
+    words.sort(key=lambda x: x.get_data_key())
+    
+    for word in words:
         word: wörterbuch.Word
         embed = discord.Embed(title=word.get_display_name())
         embed.set_image(url="attachment://image.png")
