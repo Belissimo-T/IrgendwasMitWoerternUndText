@@ -12,9 +12,9 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.keys import Keys
 
 import cachelib
-import dc_bot_framework
+import belissibot_framework
 import seleniumutil
-from context_logger.context_logger import Logger, get_current_logger, log, log_decorator
+from context_logger import Logger, get_current_logger, log, log_decorator
 
 seleniumutil.prepare()
 
@@ -42,7 +42,7 @@ def render_update(webdriver: WebDriver):
 
 
 def zoom(webdriver: WebDriver, target: float = 100) -> int:
-    el = webdriver.find_element_by_xpath('// *[ @ id = "poster-nav-view"] / div')
+    el = webdriver.find_element('// *[ @ id = "poster-nav-view"] / div')
 
     d = target - int(el.get_attribute('innerHTML')[:-1])
 
@@ -79,14 +79,14 @@ async def prepare(webdriver: WebDriver, url: str):
 
     with log("Clicking on the cookie-accept banner"):
         try:
-            webdriver.find_element_by_xpath('//*[@id="user-consent-form"]/div[2]/div[2]/a').click()
+            webdriver.find_element('//*[@id="user-consent-form"]/div[2]/div[2]/a').click()
             log("success ✅")
         except selenium.common.exceptions.ElementNotInteractableException:
             log("already accepted 😐")
 
     with log("Pausing"):
         try:
-            webdriver.find_element_by_xpath('//*[@id="seekbar-view"]/button[2]').click()
+            webdriver.find_element('//*[@id="seekbar-view"]/button[2]').click()
             log("success ✅")
         except selenium.common.exceptions.ElementNotInteractableException:
             log("not a video 😐")
@@ -112,13 +112,14 @@ async def prepare(webdriver: WebDriver, url: str):
                     print("Waiting")
                     await asyncio.sleep(2)
         else:
-            raise Exception("Could not get the Canvas object. Tried 20 times. Aborting.")
+            raise Exception("Could not get the Canvas object. Tried 20 times. Aborting.") from e
 
 
 @log_decorator("Screenshotting")
 def screenshot(webdriver: WebDriver) -> bytes:
     zoom(webdriver, 100)
-    return webdriver.find_element_by_id("whiteboard").screenshot_as_png
+    # noinspection PyTypeChecker
+    return webdriver.find_element("whiteboard").screenshot_as_png
 
 
 def format_obj(obj: dict):
@@ -192,7 +193,7 @@ class Template:
             return discord.File(fp=io.BytesIO(data),
                                 filename=f"{self.id_}.{'jpg' if self.type_ == 'image' else 'mp4'}")
         else:
-            log_ = await dc_bot_framework.Log.create(message=message)
+            log_ = await belissibot_framework.Log.create(message=message)
             with Logger(get_current_logger().prefix + "_", log_function=log_.log):
                 file = await self.get_dc_modify_file([])
             await log_.close(delete_after=10)

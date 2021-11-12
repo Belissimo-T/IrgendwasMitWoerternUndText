@@ -2,7 +2,7 @@ import hashlib
 import msgpack
 import os
 
-from context_logger.context_logger import log, log_decorator
+from context_logger import log, log_decorator
 
 PATH = "cache"
 

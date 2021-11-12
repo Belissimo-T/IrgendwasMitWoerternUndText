@@ -6,7 +6,7 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.chrome.webdriver import WebDriver
 
 import cachelib
-from context_logger.context_logger import log
+from context_logger import log
 
 
 def get_image(webdriver: WebDriver, word, ipa, part_of_speech, meaning, example, zoom=3):

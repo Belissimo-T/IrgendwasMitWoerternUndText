@@ -7,3 +7,5 @@ discord
 httpx
 msgpack
 asgiref
+git+https://github.com/BelTol3011/belissibot_framework.git
+git+https://github.com/BelTol3011/context_logger.git

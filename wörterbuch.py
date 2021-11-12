@@ -1,17 +1,16 @@
 from selenium.webdriver.chrome.webdriver import WebDriver
-
-import google_dictionary
-
 import pickle
 import discord
 from io import BytesIO
 
 import seleniumutil
-from context_logger.context_logger import log_decorator
+import google_dictionary
+from context_logger import log_decorator
 
 DICT_PREFIX = "dictionaries/"
 
 seleniumutil.prepare()
+
 
 def split_word(word: str, chars=".·*") -> list[str]:
     out = [""]

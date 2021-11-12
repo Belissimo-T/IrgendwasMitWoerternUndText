@@ -5,7 +5,7 @@ from typing import Callable, Union
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.webdriver import WebDriver
 
-from context_logger.context_logger import Logger, get_current_logger, log, log_decorator
+from context_logger import Logger, get_current_logger, log, log_decorator
 
 chrome_options = Options()
 chrome_options.add_argument("--headless")
