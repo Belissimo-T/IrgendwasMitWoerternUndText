@@ -24,7 +24,7 @@ bot_app = App()
 
 def get_wb_help(name: str):
     help_embed = discord.Embed(title=f"Usage of `!wörterbuch {name}`",
-                               description="Usage: `!wörterbuch add <word> <ipa> <part_of_speech> "
+                               description=f"Usage: `!wörterbuch {name} <word> <ipa> <part_of_speech> "
                                            f"<meaning> <example> `\n\nExample: ```!wörterbuch {name} \"rein·joi·nen\" "
                                            "\"ˈraɪndʒɔɪnən\" \"Verb\" \"einen Internetanruf oder eine "
                                            "Videospielsession betreten\" \"Ahh! Er ist wieder reingejoined.\"```",
@@ -162,7 +162,7 @@ async def wb_render_help(client: discord.Client, message: discord.Message):
 
 @bot_app.route("!wörterbuch render", do_log=True)
 async def wb_render(client: discord.Client, message: discord.Message, word_, ipa, part_of_speech, meaning, example):
-    word = wörterbuch.Word(wörterbuch.split_word(word_, "·*"), ipa, part_of_speech,
+    word = wörterbuch.Word(wörterbuch.split_word(word_), ipa, part_of_speech,
                            meaning, example)
 
     embed, file = await word.get_dc_embed()
@@ -176,7 +176,7 @@ async def wb_add_help(client: discord.Client, message: discord.Message):
 
 @bot_app.route("!wörterbuch add")
 async def wb_add(client: discord.Client, message: discord.Message, word_, ipa, part_of_speech, meaning, example):
-    word = wörterbuch.Word(wörterbuch.split_word(word_, "·*"), ipa, part_of_speech,
+    word = wörterbuch.Word(wörterbuch.split_word(word_), ipa, part_of_speech,
                            meaning, example)
 
     dictionary.add_word(word)
@@ -227,8 +227,12 @@ async def wb_list(client: discord.Client, message: discord.Message):
                                embed=discord.Embed(title="Wörterbuch Listing",
                                                    description=f"total word count: `{len(dictionary)}`"),
                                delete_after=2 * 60)
-
-    for word in dictionary:
+    
+    words = list(dictionary)
+    
+    words.sort(key=lambda x: x.get_data_key())
+    
+    for word in words:
         word: wörterbuch.Word
         embed = discord.Embed(title=word.get_display_name())
         embed.set_image(url="attachment://image.png")
