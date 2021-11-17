@@ -16,9 +16,6 @@ if not os.path.exists("dictionaries/global.dict"):
 else:
     dictionary = wörterbuch.Dictionary.from_file("global")
 
-ESCAPED_CHARS = "`~_()[]*<>"
-
-
 bot_app = App()
 
 
@@ -41,10 +38,6 @@ def get_wb_help(name: str):
     # wb_usage.add_field(name="zoom", value="Optional. Can be any float < `5` (I think). "
     #                                       "Specifies the magnification factor. Default is `3`.")
     return help_embed
-
-
-def escape(string: str) -> str:
-    return "".join(["\\" * (char in ESCAPED_CHARS) + char for char in string])
 
 
 @bot_app.route("!wörterbuch mastertest", only_from_users=[311516082320048128])
@@ -109,18 +102,64 @@ async def zitat(client: discord.Client, message: discord.Message, text: str, aut
     await message.delete()
 
 
+ESCAPED_CHARS = "`\\"
+
+
+def escape(obj) -> str:
+    try:
+        if not isinstance(obj, str):
+            obj = repr(obj)
+
+        return "".join(["\\" + char if char in ESCAPED_CHARS else char for char in obj])
+    except Exception as e:
+        return f"Error: {e!r}"
+
+
 @bot_app.route("!getmsg")
 async def getmsg(client: discord.Client, message: discord.Message, id_: str):
     # message.channel: discord.TextChannel
     msg: discord.Message = await message.channel.fetch_message(int(id_))
 
-    out = discord.Embed(title=f"Message: `{id_}`", description=f"`{escape(msg.content)}`",
-                        color=discord.Color(0x00FF00))
+    for key in msg.__slots__:
+        # msg.__getattribute__(key)
+        try:
+            escaped_msg = escape(repr(msg.__getattribute__(key)))
+        except Exception as e:
+            escaped_msg = f"Error: {e!r}"
+
+        snippets = [escaped_msg[i:min(len(escaped_msg), i + 1000)] for i in range(0, len(escaped_msg), 1000)]
+
+        for i, snippet in enumerate(snippets):
+            out = discord.Embed(title=f"Message: `{id_}`, Attributes",
+                                description=f"{key}: `{snippet}`",
+                                color=discord.Color(0x00FF00))
+            out.set_footer(text=f"SNIPPET #{key}:{i}")
+
+            await message.channel.send(embed=out)
 
     for i, embed in enumerate(msg.embeds):
-        val = f"`{escape(str(embed.to_dict()))}`"
-        out.add_field(name=f"Embed #{i + 1}", value=val)
-    await message.channel.send(embed=out)
+        # val = escape(str(embed.to_dict()))
+        #
+        # snippets = [val[i:min(len(val), i + 1022)] for i in range(0, len(val), 1022)]
+        # for j, snippet in enumerate(snippets):
+        #     out = discord.Embed(title=f"Message: `{id_}`", description=f"Embeds:",
+        #                         color=discord.Color(0x00FF00))
+        #     out.add_field(name=f"Embed #{i + 1}", value=f"`{snippet}`")
+        #     out.set_footer(text=f"SNIPPET #E{i}:{j}")
+        #     await message.channel.send(embed=out)
+
+        for key, value in embed.to_dict().items():
+            escaped_msg = escape(repr(value))
+
+            snippets = [escaped_msg[i:min(len(escaped_msg), i + 1000)] for i in range(0, len(escaped_msg), 1000)]
+
+            for j, snippet in enumerate(snippets):
+                out = discord.Embed(title=f"Message: `{id_}`, Embeds",
+                                    color=discord.Color(0x00FF00))
+                out.add_field(name=f"Embed #{i + 1}", value=f"{key}: `{snippet}`")
+                out.set_footer(text=f"SNIPPET #E{i}:{j}")
+
+                await message.channel.send(embed=out)
 
 
 # @route("!wörterbuch fullhelp")
@@ -227,11 +266,11 @@ async def wb_list(client: discord.Client, message: discord.Message):
                                embed=discord.Embed(title="Wörterbuch Listing",
                                                    description=f"total word count: `{len(dictionary)}`"),
                                delete_after=2 * 60)
-    
+
     words = list(dictionary)
-    
+
     words.sort(key=lambda x: x.get_data_key())
-    
+
     for word in words:
         word: wörterbuch.Word
         embed = discord.Embed(title=word.get_display_name())
