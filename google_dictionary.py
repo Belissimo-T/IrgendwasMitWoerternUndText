@@ -4,6 +4,7 @@ from io import BytesIO
 import selenium.common.exceptions
 from selenium.webdriver import ActionChains
 from selenium.webdriver.chrome.webdriver import WebDriver
+from selenium.webdriver.common.by import By
 
 import cachelib
 from context_logger import log
@@ -21,14 +22,14 @@ def get_image(webdriver: WebDriver, word, ipa, part_of_speech, meaning, example,
     with log("Click on the agree button"):
         try:
             log("Finding element 🔍")
-            i_agree = webdriver.find_element_by_xpath('//*[@id="L2AGLb"]')
+            i_agree = webdriver.find_element(By.XPATH, '//*[@id="L2AGLb"]')
             i_agree.click()
             log("Success ✅")
         except selenium.common.exceptions.NoSuchElementException:
             log("Already agreed 😐")
 
     with log("Finding the base dictionary element"):
-        frame = webdriver.find_element_by_class_name("lr_container").find_elements_by_xpath("./*")[2]
+        frame = webdriver.find_element(By.CLASS_NAME, "lr_container").find_elements(By.XPATH, "./*")[2]
 
     example = f'"{example}"'
     pad = 5 * zoom
