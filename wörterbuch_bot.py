@@ -359,4 +359,4 @@ with open("secret.token", "r") as f:
     TOKEN = f.read()
 
 bot_app.run(discord_token=TOKEN,
-            game="!wörterbuch help")
+            game="!belissibot help")
