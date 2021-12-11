@@ -173,7 +173,7 @@ async def getmsg(client: discord.Client, message: discord.Message, id_: str):
 #     await message.channel.send("!wörterbuch fullhelp help")
 #     await message.channel.send("!g2p help")
 
-@bot_app.route("!wörterbuch")
+@bot_app.route("!belissibot")
 async def wb(client: discord.Client, message: discord.Message):
     help_embed = discord.Embed(title="Commands of the Wörterbuch-Bot", color=discord.Color(0xFFFF00),
                                description="Tip: Add a `help` to any command to show its help.")
@@ -359,4 +359,4 @@ with open("secret.token", "r") as f:
     TOKEN = f.read()
 
 bot_app.run(discord_token=TOKEN,
-            game="!belissibot help")
+            game="!belissibot")
