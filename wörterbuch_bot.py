@@ -173,9 +173,22 @@ async def getmsg(client: discord.Client, message: discord.Message, id_: str):
 #     await message.channel.send("!wörterbuch fullhelp help")
 #     await message.channel.send("!g2p help")
 
-@bot_app.route("!wörterbuch")
-async def wb(client: discord.Client, message: discord.Message):
-    help_embed = discord.Embed(title="Commands of the Wörterbuch-Bot", color=discord.Color(0xFFFF00),
+@bot_app.route("!belissibot")
+async def belissibot_help(client: discord.Client, message: discord.Message):
+    help_embed = discord.Embed(title="Commands of the Belissibot", color=discord.Color(0xFFFF00),
+                               description="Tip: Add a `help` to any command to show its help.")
+    help_embed.add_field(name="`!wörterbuch`", value="Shows all commands related to the Wörterbuch-functionality.",
+                         inline=False)
+    help_embed.add_field(name="`!postermywall`", value="Shows all commands related to the PosterMyWall-functionality.",
+                         inline=False)
+    help_embed.add_field(name="`!zitat`", value="Generates a Zitat.", inline=False)
+
+    await message.channel.send(embed=help_embed)
+
+
+@bot_app.route("!wörterbuch", raw_args=True)
+async def wb(client: discord.Client, message: discord.Message, _=""):
+    help_embed = discord.Embed(title="Wörterbuch-Commands of the Belissibot-Bot", color=discord.Color(0xFFFF00),
                                description="Tip: Add a `help` to any command to show its help.")
     help_embed.add_field(name="`!wörterbuch render`", value="Renders one Wörterbuch-entry.", inline=False)
     help_embed.add_field(name="`!wörterbuch add`", value="Adds a word to the dictionary.", inline=False)
@@ -183,13 +196,8 @@ async def wb(client: discord.Client, message: discord.Message):
                          inline=False)
     help_embed.add_field(name="`!wörterbuch list`", value="Shows all words in the dictionary.", inline=False)
     help_embed.add_field(name="`!wörterbuch remove`", value="Removes a word from the dictionary.", inline=False)
-    help_embed.add_field(name="`!wörterbuch`", value="Shows this help.",
-                         inline=False)
-    help_embed.add_field(name="`!wörterbuch fullhelp`", value="Calls the help of every function.", inline=False)
 
     help_embed.add_field(name="`!g2p`", value="Grapheme to Phoneme: Helps getting the ipa string.", inline=False)
-
-    help_embed.add_field(name="`!zitat`", value="Generates a Zitat.", inline=False)
 
     await message.channel.send(embed=help_embed)
 
@@ -359,4 +367,4 @@ with open("secret.token", "r") as f:
     TOKEN = f.read()
 
 bot_app.run(discord_token=TOKEN,
-            game="!wörterbuch help")
+            game="!belissibot")
