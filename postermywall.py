@@ -9,6 +9,7 @@ import msgpack
 import selenium.common.exceptions
 from selenium.webdriver import ActionChains
 from selenium.webdriver.chrome.webdriver import WebDriver
+from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
 import cachelib
@@ -42,7 +43,7 @@ def render_update(webdriver: WebDriver):
 
 
 def zoom(webdriver: WebDriver, target: float = 100) -> int:
-    el = webdriver.find_element('// *[ @ id = "poster-nav-view"] / div')
+    el = webdriver.find_element(By.XPATH, '// *[ @ id = "poster-nav-view"] / div')
 
     d = target - int(el.get_attribute('innerHTML')[:-1])
 
@@ -79,16 +80,18 @@ async def prepare(webdriver: WebDriver, url: str):
 
     with log("Clicking on the cookie-accept banner"):
         try:
-            webdriver.find_element('//*[@id="user-consent-form"]/div[2]/div[2]/a').click()
+            webdriver.find_element(By.XPATH, '//*[@id="user-consent-form"]/div[2]/div[2]/a').click()
             log("success ✅")
-        except selenium.common.exceptions.ElementNotInteractableException:
+        except (selenium.common.exceptions.ElementNotInteractableException,
+                selenium.common.exceptions.NoSuchElementException):
             log("already accepted 😐")
 
     with log("Pausing"):
         try:
-            webdriver.find_element('//*[@id="seekbar-view"]/button[2]').click()
+            webdriver.find_element(By.XPATH, '//*[@id="seekbar-view"]/button[2]').click()
             log("success ✅")
-        except selenium.common.exceptions.ElementNotInteractableException:
+        except (selenium.common.exceptions.ElementNotInteractableException,
+                selenium.common.exceptions.NoSuchElementException):
             log("not a video 😐")
 
     with log("Running first script"):
@@ -119,13 +122,13 @@ async def prepare(webdriver: WebDriver, url: str):
 def screenshot(webdriver: WebDriver) -> bytes:
     zoom(webdriver, 100)
     # noinspection PyTypeChecker
-    return webdriver.find_element("whiteboard").screenshot_as_png
+    return webdriver.find_element(By.ID, "whiteboard").screenshot_as_png
 
 
 def format_obj(obj: dict):
     path, obj = obj
     text = obj['text'].replace('\n', '\\n')
-    return f"`{'.'.join([str(node) for node in path])}`: {text}"
+    return f"`{[str(node) for node in path]!r}`: {text}"
 
 
 class Template:
