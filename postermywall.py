@@ -32,14 +32,32 @@ size_options = ["all", "poster", "a1", "a2", "a3", "a4", "album-cover", "banner-
 client = httpx.AsyncClient()
 
 
+@log_decorator("zoom out")
+def zoom_out(webdriver: WebDriver):
+    try:
+        webdriver.find_element(By.XPATH, '//*[@id="poster-nav-view"]/button[3]').click()
+    except Exception as e:
+        log(f"Fell back to keyboard method, {e.args[0]}")
+        ActionChains(webdriver).key_down(Keys.CONTROL).send_keys('-').key_up(Keys.CONTROL).perform()
+
+
+@log_decorator("zoom in")
+def zoom_in(webdriver: WebDriver):
+    try:
+        webdriver.find_element(By.XPATH, '//*[@id="poster-nav-view"]/button[4]').click()
+    except Exception as e:
+        log(f"Fell back to keyboard method, {e.args[0]}")
+        ActionChains(webdriver).key_down(Keys.CONTROL).send_keys('+').key_up(Keys.CONTROL).perform()
+
+
 @log_decorator("Invoking renderAll js method")
 def render_update(webdriver: WebDriver):
-    with log("Zooming out"):
-        ActionChains(webdriver).key_down(Keys.CONTROL).send_keys('-').key_up(Keys.CONTROL).perform()
+    zoom_out(webdriver)
+
     with log("Sleeping 1s"):
         time.sleep(1)
-    with log("Zooming in"):
-        ActionChains(webdriver).key_down(Keys.CONTROL).send_keys('+').key_up(Keys.CONTROL).perform()
+
+    zoom_in(webdriver)
 
 
 def zoom(webdriver: WebDriver, target: float = 100) -> int:
@@ -54,9 +72,9 @@ def zoom(webdriver: WebDriver, target: float = 100) -> int:
             return current
 
         if dnew < 0:
-            ActionChains(webdriver).key_down(Keys.CONTROL).send_keys('-').key_up(Keys.CONTROL).perform()
+            zoom_out(webdriver)
         elif dnew > 0:
-            ActionChains(webdriver).key_down(Keys.CONTROL).send_keys('+').key_up(Keys.CONTROL).perform()
+            zoom_in(webdriver)
         else:
             return current
 
@@ -80,19 +98,18 @@ async def prepare(webdriver: WebDriver, url: str):
 
     with log("Clicking on the cookie-accept banner"):
         try:
-            webdriver.find_element(By.XPATH, '//*[@id="user-consent-form"]/div[2]/div[2]/a').click()
+            # webdriver.find_element(By.XPATH, '//*[@id="user-consent-form"]/div[2]/div[2]/a').click()
+            webdriver.find_element(By.XPATH, '//*[@id="user-consent-form"]/div[2]/div[2]').click()
             log("success ✅")
-        except (selenium.common.exceptions.ElementNotInteractableException,
-                selenium.common.exceptions.NoSuchElementException):
-            log("already accepted 😐")
+        except Exception as e:
+            log(f"already accepted 😐 {e.args[0]}")
 
     with log("Pausing"):
         try:
             webdriver.find_element(By.XPATH, '//*[@id="seekbar-view"]/button[2]').click()
             log("success ✅")
-        except (selenium.common.exceptions.ElementNotInteractableException,
-                selenium.common.exceptions.NoSuchElementException):
-            log("not a video 😐")
+        except Exception as e:
+            log(f"not a video 😐 {e.args[0]}")
 
     with log("Running first script"):
         webdriver.execute_script(set_up)
@@ -108,7 +125,7 @@ async def prepare(webdriver: WebDriver, url: str):
                     log("success ✅")
                     return
                 except selenium.common.exceptions.JavascriptException as e:
-                    log(f"didn't work 😢")
+                    log(f"didn't work 😢 {e.args[0]}")
 
                     render_update(webdriver)
 
@@ -128,7 +145,7 @@ def screenshot(webdriver: WebDriver) -> bytes:
 def format_obj(obj: dict):
     path, obj = obj
     text = obj['text'].replace('\n', '\\n')
-    return f"`{[str(node) for node in path]!r}`: {text}"
+    return f"`{path}`: {text}"
 
 
 class Template:
