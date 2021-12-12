@@ -66,6 +66,7 @@ def get_image(webdriver: WebDriver, word, ipa, part_of_speech, meaning, example,
         png = webdriver.get_screenshot_as_png()  # saves screenshot of entire page
 
         log("Opening with PIL")
+        # noinspection PyTypeChecker
         im: PngImagePlugin.PngImageFile = Image.open(BytesIO(png))
 
         left = location['x'] * zoom - pad
