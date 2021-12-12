@@ -6,9 +6,10 @@ from typing import Literal
 import discord
 
 import g2p
+import postermywall
 import postermywall as pmw
 import wörterbuch
-from belissibot_framework import App
+from belissibot_framework import App, construct_help_embed
 from zitat import get_image, get_zitat
 
 if not os.path.exists("dictionaries/global.dict"):
@@ -19,45 +20,72 @@ else:
 bot_app = App()
 
 
-def get_wb_help(name: str):
-    help_embed = discord.Embed(title=f"Usage of `!wörterbuch {name}`",
-                               description=f"Usage: `!wörterbuch {name} <word> <ipa> <part_of_speech> "
-                                           f"<meaning> <example> `\n\nExample: ```!wörterbuch {name} \"rein·joi·nen\" "
-                                           "\"ˈraɪndʒɔɪnən\" \"Verb\" \"einen Internetanruf oder eine "
-                                           "Videospielsession betreten\" \"Ahh! Er ist wieder reingejoined.\"```",
-                               color=discord.Color(0xFFFF00))
-
-    help_embed.add_field(name="word", value="The word. This symbol might be helpful: `·`")
-    help_embed.add_field(name="ipa",
-                         value="The phonetic transcription of the word. Mark the stressed syllable with one of these: "
-                               "`ˈ'´`.")
-    help_embed.add_field(name="part_of_speech",
-                         value="The part of speech of the word. E.g. `Substantiv`, `Verb`, `Adjektiv`.")
-    help_embed.add_field(name="meaning", value="The meaning of the word.")
-    help_embed.add_field(name="example", value="An example usage of the word.")
-    # wb_usage.add_field(name="zoom", value="Optional. Can be any float < `5` (I think). "
-    #                                       "Specifies the magnification factor. Default is `3`.")
-    return help_embed
+def get_wb_help(name: str, description: str):
+    return construct_help_embed(
+        f"!wörterbuch {name}",
+        description,
+        f"!wörterbuch {name} \"rein·joi·nen\" \"ˈraɪndʒɔɪnən\" \"Verb\" \"einen Internetanruf oder eine "
+        f"Videospielsession betreten\" \"Ahh! Er ist wieder reingejoined.\"",
+        word=("The word. This symbol might be helpful: `·`", "str"),
+        ipa=("The phonetic transcription of the word. Mark the stressed syllable with one of these: `ˈ'´`.", "str"),
+        part_of_speech=("The part of speech of the word. E.g. `Substantiv`, `Verb`, `Adjektiv`.", "str"),
+        meaning=("The meaning of the word.", "str"),
+        example=("An example usage of the word. For example an example sentence.", "str")
+    )
 
 
-@bot_app.route("!wörterbuch mastertest", only_from_users=[311516082320048128])
-async def testest(client: discord.Client, message: discord.Message, echo: str = ""):
-    if echo:
-        await message.channel.send(echo)
+@bot_app.add_help("!belissibot fullhelp", "Test all help function of this bot. Can only be used by Belissimo#1438.",
+                  "!belissibot fullhelp")
+@bot_app.route("!belissibot fullhelp", only_from_users=[311516082320048128])
+async def testest(client: discord.Client, message: discord.Message):
+    helps = ["!belissibot",
+             "!wörterbuch",
+             "!postermywall",
+             "!zitat help",
+             "!poll",
+             "!wörterbuch render help",
+             "!wörterbuch add help",
+             "!wörterbuch search help",
+             "!wörterbuch list help",
+             "!wörterbuch remove help",
+             "!g2p help",
+             "!postermywall render help",
+             "!postermywall attrs help",
+             "!postermywall search help",
+             "!poll new help",
+             "!poll choice help",
+             "!poll remove help",
+             "!poll publish help",
+             "!belissibot fullhelp help"]
+
+    await asyncio.gather(*[message.channel.send(help_) for help_ in helps])
 
 
-@bot_app.route("!postermywall render", do_log=True)
-async def postermywall_render(client: discord.Client, message: discord.Message, id_: str, changes):
+@bot_app.add_help("!postermywall render",
+                  "Renders a template with the given changes",
+                  '!postermywall render "5a72a3a166d55ebea89d03ebceb1de05" [([2, 1], "This is modified!"), ([7, 1], "50'
+                  '0")]',
+                  template_id="The template id obtained by `!postermywall search`.",
+                  changes="Of the type ```py\nlist[tuple[list[int], str]]```\nA list of changes to be performed on the template. "
+                          "I am to lazy to explain the syntax of this; figure it out on your own using the example of "
+                          "this and the example of `!postermywall attrs`.")
+@bot_app.route("!postermywall render", do_log=True, delete_message=False)
+async def postermywall_render(client: discord.Client, message: discord.Message, template_id: str, changes):
     template = await pmw.Template.from_id(id_)
 
-    out = discord.Embed(title=f"Custom Template based on `{id_}`", description=f"command: `!postermywall render "
-                                                                               f"{id_!r} {changes!r}`")
+    out = discord.Embed(title=f"Custom Template based on `{template_id}`",
+                        description=f"command: `!postermywall render "
+                                    f"{template_id!r} {changes!r}`")
     out.set_image(url="attachment://image.png")
     file = await template.get_dc_modify_file(changes)
     await message.channel.send(embed=out, file=file)
 
 
-@bot_app.route("!postermywall attrs", do_log=True)
+@bot_app.add_help("!postermywall attrs",
+                  "Shows all modifyable elemements with their respective path given a template id.",
+                  "!postermywall attrs \"5a72a3a166d55ebea89d03ebceb1de05\"",
+                  template_id="The templayte id obtained by `!postermywall search`.")
+@bot_app.route("!postermywall attrs", do_log=True, delete_message=False)
 async def postermywall_attrs(client: discord.Client, message: discord.Message, template_id: str):
     template = await pmw.Template.from_id(template_id)
     await message.channel.send(embed=await template.get_dc_attrs_embed(), file=await template.get_dc_file(message))
@@ -69,27 +97,28 @@ async def send_template(message: discord.Message, template: pmw.Template):
                                file=await template.get_dc_file(message=message))
 
 
-@bot_app.route("!postermywall search")
-async def postermywall_search(client: discord.Client, message: discord.Message, search_str: str,
+size_help_str = ', '.join([f'`{size}`' for size in postermywall.size_options])
+
+
+@bot_app.add_help("!postermywall search",
+                  "Shows matching templates based on the specified search query.",
+                  "!postermywall search \"Halloween\"",
+                  argstr="<search_query: str> [type: str [size: str]]",
+                  search_query="The search query.",
+                  type="The type of the template. Can be one of `all`, `image`, `video`. Optional.",
+                  size=f"The size of the template. Can be one of {size_help_str}. Optional.")
+@bot_app.route("!postermywall search", delete_message=False)
+async def postermywall_search(client: discord.Client, message: discord.Message, search_query: str,
                               type_: Literal["all", "image", "video"] = "all", size: str = "all"):
     await asyncio.gather(*[send_template(message, template) for template in
-                           await pmw.search(search_str, type_, size)])
+                           await pmw.search(search_query, type_, size)])
 
 
-@bot_app.route("!zitat help")
-async def zitat_help(client: discord.Client, message: discord.Message):
-    help_embed = discord.Embed(title="Usage of `!zitat`",
-                               description="Usage: `!zitat <text> <author>`\n\nExample: "
-                                           "```!zitat \"Trapdoors und Repeater sind eigentlich das gleiche.\" "
-                                           "\"Zwakel\"```",
-                               color=discord.Color(0xFFFF00))
-
-    help_embed.add_field(name="text", value="The text of the Zitat.")
-    help_embed.add_field(name="author", value="The author of the Zitat.")
-
-    await message.channel.send(embed=help_embed)
-
-
+@bot_app.add_help("!zitat",
+                  "Generates a Zitat.",
+                  "!zitat \"Trapdoors und Repeater sind eigentlich das gleiche.\" \"Zwakel\"",
+                  text="The text of the Zitat.",
+                  author="The author of the zitat to be displayed at the bottom of it.")
 @bot_app.route("!zitat")
 async def zitat(client: discord.Client, message: discord.Message, text: str, author: str):
     background = get_image()
@@ -162,17 +191,9 @@ async def getmsg(client: discord.Client, message: discord.Message, id_: str):
                 await message.channel.send(embed=out)
 
 
-# @route("!wörterbuch fullhelp")
-# async def fullhelp(message: discord.Message):
-#     await message.channel.send("!wörterbuch render help")
-#     await message.channel.send("!wörterbuch add help")
-#     await message.channel.send("!wörterbuch search help")
-#     await message.channel.send("!wörterbuch list help")
-#     await message.channel.send("!wörterbuch remove help")
-#     await message.channel.send("!wörterbuch help")
-#     await message.channel.send("!wörterbuch fullhelp help")
-#     await message.channel.send("!g2p help")
-
+@bot_app.add_help("!belissibot",
+                  "Lists all command categories and their respective help commands.",
+                  "!belissibot")
 @bot_app.route("!belissibot")
 async def belissibot_help(client: discord.Client, message: discord.Message):
     help_embed = discord.Embed(title="Commands of the Belissibot", color=discord.Color(0xFFFF00),
@@ -186,9 +207,12 @@ async def belissibot_help(client: discord.Client, message: discord.Message):
     await message.channel.send(embed=help_embed)
 
 
+@bot_app.add_help("!wörterbuch",
+                  "Lists all commands of the Wörterbuch-category.",
+                  "!wörterbuch")
 @bot_app.route("!wörterbuch", raw_args=True)
 async def wb(client: discord.Client, message: discord.Message, _=""):
-    help_embed = discord.Embed(title="Wörterbuch-Commands of the Belissibot-Bot", color=discord.Color(0xFFFF00),
+    help_embed = discord.Embed(title="Wörterbuch-Commands of the Belissibot", color=discord.Color(0xFFFF00),
                                description="Tip: Add a `help` to any command to show its help.")
     help_embed.add_field(name="`!wörterbuch render`", value="Renders one Wörterbuch-entry.", inline=False)
     help_embed.add_field(name="`!wörterbuch add`", value="Adds a word to the dictionary.", inline=False)
@@ -204,7 +228,7 @@ async def wb(client: discord.Client, message: discord.Message, _=""):
 
 @bot_app.route("!wörterbuch render help")
 async def wb_render_help(client: discord.Client, message: discord.Message):
-    await message.channel.send(embed=get_wb_help("render"))
+    await message.channel.send(embed=get_wb_help("render", "Renders a dictionary entry."))
 
 
 @bot_app.route("!wörterbuch render", do_log=True)
@@ -218,7 +242,7 @@ async def wb_render(client: discord.Client, message: discord.Message, word_, ipa
 
 @bot_app.route("!wörterbuch add help")
 async def wb_add_help(client: discord.Client, message: discord.Message):
-    await message.channel.send(embed=get_wb_help("add"))
+    await message.channel.send(embed=get_wb_help("add", "Adds the described word to the dictionary."))
 
 
 @bot_app.route("!wörterbuch add")
@@ -232,21 +256,10 @@ async def wb_add(client: discord.Client, message: discord.Message, word_, ipa, p
     await message.channel.send(file=file, embed=embed)
 
 
-@bot_app.route("!wörterbuch remove help")
-async def wb_search_help(client: discord.Client, message: discord.Message):
-    help_embed = discord.Embed(title="Usage of `!wörterbuch search`",
-                               description="Usage: `!wörterbuch remove <word>`\n\nExample: "
-                                           "```!wörterbuch remove \"reinjoinen\"```",
-                               color=discord.Color(0xFFFF00))
-
-    help_embed.add_field(name="word", value="The word to be deleted.")
-
-    # wb_usage.add_field(name="zoom", value="Optional. Can be any float < `5` (I think). "
-    #                                       "Specifies the magnification factor. Default is `3`.")
-
-    await message.channel.send(embed=help_embed)
-
-
+@bot_app.add_help("!wörterbuch remove",
+                  "Removes a word from the dictionary.",
+                  "!wörterbuch remove \"reinjoinen\"",
+                  word="The word to be deleted. Requires an exact match and is case-sensitive.")
 @bot_app.route("!wörterbuch remove")
 async def wb_remove(client: discord.Client, message: discord.Message, word: str):
     try:
@@ -259,15 +272,9 @@ async def wb_remove(client: discord.Client, message: discord.Message, word: str)
     await message.channel.send(embed=out)
 
 
-@bot_app.route("!wörterbuch list help")
-async def wb_list_help(client: discord.Client, message: discord.Message):
-    help_embed = discord.Embed(title="Usage of `!wörterbuch list`",
-                               description="Usage: `!wörterbuch list`\n\nExample: "
-                                           "```!wörterbuch list```",
-                               color=discord.Color(0xFFFF00))
-    await message.channel.send(embed=help_embed)
-
-
+@bot_app.add_help("!wörterbuch list",
+                  "Lists all the word in the dictionary",
+                  "!wörterbuch list")
 @bot_app.route("!wörterbuch list")
 async def wb_list(client: discord.Client, message: discord.Message):
     await message.channel.send("temporary message, gets auto-deleted after 2 min",
@@ -288,24 +295,13 @@ async def wb_list(client: discord.Client, message: discord.Message):
                                    delete_after=2 * 60)
 
 
-@bot_app.route("!wörterbuch search help")
-async def wb_search_help(client: discord.Client, message: discord.Message):
-    help_embed = discord.Embed(title="Usage of `!wörterbuch search`",
-                               description="Usage: `!wörterbuch search <query>`\n\nExample: "
-                                           "```!wörterbuch search \"reinjoinen\"```",
-                               color=discord.Color(0xFFFF00))
-
-    help_embed.add_field(name="query", value="The search query.")
-
-    # wb_usage.add_field(name="zoom", value="Optional. Can be any float < `5` (I think). "
-    #                                       "Specifies the magnification factor. Default is `3`.")
-
-    await message.channel.send(embed=help_embed)
-
-
+@bot_app.add_help("!wörterbuch search",
+                  "Searches for a word in the dictionary.",
+                  "!wörterbuch search \"reinjoinen\"",
+                  search_query="The search query.")
 @bot_app.route("!wörterbuch search")
-async def wb_search(client: discord.Client, message: discord.Message, query: str):
-    results = dictionary.search_word(query)
+async def wb_search(client: discord.Client, message: discord.Message, search_query: str):
+    results = dictionary.search_word(search_query)
 
     for i, word in enumerate(results):
         embed, file = await word.get_dc_embed(f"Search result #{i + 1}")
@@ -313,7 +309,7 @@ async def wb_search(client: discord.Client, message: discord.Message, query: str
 
     if len(results) == 0:
         embed = discord.Embed(color=discord.Color(0xFF0000),
-                              description=f"No search results found for query `{query}`. 😢")
+                              description=f"No search results found for query `{search_query}`. 😢")
         await message.channel.send(embed=embed)
 
 
@@ -337,9 +333,8 @@ async def g2p_help(client: discord.Client, message: discord.Message):
                                "erface/Grapheme2Phoneme) whose Terms Of Usage can be found [here](https://clarin.pho"
                                "netik.uni-muenchen.de/BASWebServices/help/termsOfUsage#termsofusage). It states "
                                "that the usage of this API is for **academic (non-profit research) use only** and "
-                               "the user **must be part of an academic institution**.\nThis means: **Do not spam** "
+                               "the user **must be part of an academic institution**.\n**Do not spam** "
                                "and **don't give away any private information**.", inline=False)
-    help_embed.set_footer(text="Also have a look at the !wörterbuch command.")
 
     await message.channel.send(embed=help_embed)
 
