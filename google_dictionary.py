@@ -45,7 +45,7 @@ def get_image(webdriver: WebDriver, word, ipa, part_of_speech, meaning, example,
             change = xpaths_changes[xpath]
             log(f"{xpath} to {change}")
 
-            element = frame.find_element_by_xpath(xpath)
+            element = frame.find_element(By.XPATH, xpath)
             # change text of element
             webdriver.execute_script(f"arguments[0].innerText = '{change}'", element)
 
@@ -63,6 +63,7 @@ def get_image(webdriver: WebDriver, word, ipa, part_of_speech, meaning, example,
         location = frame.location
         size = frame.size
         log("Getting png")
+        png = webdriver.get_screenshot_as_png()  # saves screenshot of entire page
         png = webdriver.get_screenshot_as_png()  # saves screenshot of entire page
 
         log("Opening with PIL")
