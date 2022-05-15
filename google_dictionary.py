@@ -34,16 +34,16 @@ def get_image(webdriver: WebDriver, word, ipa, part_of_speech, meaning, example,
     example = f'"{example}"'
     pad = 5 * zoom
 
-    xpaths_changes = {"div/div[2]/div[1]/div/span": word,
-                      "div/div[2]/div[2]/span/span": ipa,
-                      "div/div[4]/div/div/div/div/div/i/span": part_of_speech,
-                      "div/div[4]/div/div/ol/li[1]/div/div/div[1]/div[2]/div/div[1]/span": meaning,
-                      "div/div[4]/div/div/ol/li[1]/div/div/div[1]/div[2]/div/div[2]/div": example}
+    xpaths_changes = {"div/div[1]/div[2]/div[1]/div/span": word,
+                      "div/div[1]/div[2]/div[2]/span/span": ipa,
+                      "div/div[3]/div/div/div/div/div/i/span": part_of_speech,
+                      "div/div[3]/div/div/ol/li[1]/div/div/div[1]/div[2]/div/div/div[1]/span": meaning,
+                      "div/div[3]/div/div/ol/li[1]/div/div/div[1]/div[2]/div/div/div[2]/div": example}
 
     with log("Changing text"):
         for xpath in xpaths_changes:
             change = xpaths_changes[xpath]
-            log(f"{xpath} to {change}")
+            log(f"{change!r}")
 
             element = frame.find_element(By.XPATH, xpath)
             # change text of element
