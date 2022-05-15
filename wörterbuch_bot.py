@@ -34,7 +34,7 @@ def get_wb_help(name: str, description: str):
     )
 
 
-@bot_app.add_help("!belissibot fullhelp", "Test all help function of this bot. Can only be used by Belissimo#1438.",
+@bot_app.add_help("!belissibot fullhelp", "Test all help functions of this bot. Can only be used by `Belissimo#1438`.",
                   "!belissibot fullhelp")
 @bot_app.route("!belissibot fullhelp", only_from_users=[311516082320048128])
 async def testest(client: discord.Client, message: discord.Message):
@@ -71,7 +71,7 @@ async def testest(client: discord.Client, message: discord.Message):
                           "this and the example of `!postermywall attrs`.")
 @bot_app.route("!postermywall render", do_log=True, delete_message=False)
 async def postermywall_render(client: discord.Client, message: discord.Message, template_id: str, changes):
-    template = await pmw.Template.from_id(id_)
+    template = await pmw.Template.from_id(template_id)
 
     out = discord.Embed(title=f"Custom Template based on `{template_id}`",
                         description=f"command: `!postermywall render "
