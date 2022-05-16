@@ -197,7 +197,7 @@ async def getmsg(client: discord.Client, message: discord.Message, id_: str):
 @bot_app.route("!belissibot")
 async def belissibot_help(client: discord.Client, message: discord.Message):
     help_embed = discord.Embed(title="Commands of the Belissibot", color=discord.Color(0xFFFF00),
-                               description="Tip: Add a `help` to any command to show its help.")
+                               description="Tip: Add a `help` to any command to see what it does.")
     help_embed.add_field(name="`!wörterbuch`", value="Shows all commands related to the Wörterbuch-functionality.",
                          inline=False)
     help_embed.add_field(name="`!postermywall`", value="Shows all commands related to the PosterMyWall-functionality.",
@@ -213,7 +213,7 @@ async def belissibot_help(client: discord.Client, message: discord.Message):
 @bot_app.route("!wörterbuch", raw_args=True)
 async def wb(client: discord.Client, message: discord.Message, _=""):
     help_embed = discord.Embed(title="Wörterbuch-Commands of the Belissibot", color=discord.Color(0xFFFF00),
-                               description="Tip: Add a `help` to any command to show its help.")
+                               description="Tip: Add a `help` to any command to see what it does.")
     help_embed.add_field(name="`!wörterbuch render`", value="Renders one Wörterbuch-entry.", inline=False)
     help_embed.add_field(name="`!wörterbuch add`", value="Adds a word to the dictionary.", inline=False)
     help_embed.add_field(name="`!wörterbuch search`", value="Searches for a word in the dictionary.",
