@@ -120,10 +120,10 @@ class Dictionary:
         else:
             out = []
             query = query.lower()
-            for key in self._data:
+            for key, word in self._data.items():
                 key = key.lower()
                 if key == query or key.startswith(query) or query in key:
-                    out.append(self._data[key])
+                    out.append(word)
             return out
 
     def __iter__(self):
