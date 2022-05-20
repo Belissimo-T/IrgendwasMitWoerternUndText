@@ -27,7 +27,8 @@ def get_wb_help(name: str, description: str):
         f"!wörterbuch {name} \"rein·joi·nen\" \"ˈraɪndʒɔɪnən\" \"Verb\" \"einen Internetanruf oder eine "
         f"Videospielsession betreten\" \"Ahh! Er ist wieder reingejoined.\"",
         word=("The word. This symbol might be helpful: `·`", "str"),
-        ipa=("The phonetic transcription of the word. Mark the stressed syllable with one of these: `ˈ'´`.", "str"),
+        ipa=("The phonetic transcription of the word. Mark the stressed syllable with one of these: `ˈ'´`. If you need "
+             "help transcribing your word to the phonetic alphabet, you can use the `!g2p` command.", "str"),
         part_of_speech=("The part of speech of the word. E.g. `Substantiv`, `Verb`, `Adjektiv`.", "str"),
         meaning=("The meaning of the word.", "str"),
         example=("An example usage of the word. For example an example sentence.", "str")
@@ -228,7 +229,8 @@ async def wb(client: discord.Client, message: discord.Message, _=""):
 
 @bot_app.route("!wörterbuch render help")
 async def wb_render_help(client: discord.Client, message: discord.Message):
-    await message.channel.send(embed=get_wb_help("render", "Renders a dictionary entry."))
+    await message.channel.send(embed=get_wb_help("render", "Renders a dictionary entry. To add one to the dictionary, "
+                                                           "use `!wörterbuch add`."))
 
 
 @bot_app.route("!wörterbuch render", do_log=True)
@@ -361,5 +363,4 @@ async def g2p_(client: discord.Client, message: discord.Message, _word, lang):
 with open("secret.token", "r") as f:
     TOKEN = f.read()
 
-bot_app.run(discord_token=TOKEN,
-            game="!belissibot")
+bot_app.run(discord_token=TOKEN, game="!belissibot")

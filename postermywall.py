@@ -3,6 +3,7 @@ import io
 import time
 from typing import Literal
 
+import context_logger
 import discord
 import httpx
 import msgpack
@@ -213,11 +214,7 @@ class Template:
             return discord.File(fp=io.BytesIO(data),
                                 filename=f"{self.id_}.{'jpg' if self.type_ == 'image' else 'mp4'}")
         else:
-            log_ = await belissibot_framework.Log.create(message=message)
-            with Logger(get_current_logger().prefix + "_", log_function=log_.log):
-                file = await self.get_dc_modify_file([])
-            await log_.close(delete_after=10)
-            return file
+            return await self.get_dc_modify_file([])
 
     async def get_objects(self, webdriver: WebDriver) -> list[dict]:
         def _get_objects(object_: dict, path: list[int] = None):

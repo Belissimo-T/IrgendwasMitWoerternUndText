@@ -5,7 +5,7 @@ from typing import Callable, Union
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.webdriver import WebDriver
 
-from context_logger import Logger, get_current_logger, log, log_decorator
+from context_logger import Logger, log, log_decorator, loggerstack_contextvar, nlist_contextvar, get_current_nlist, get_current_logger
 
 chrome_options = Options()
 chrome_options.add_argument("--headless")
@@ -70,13 +70,14 @@ def _async_thread_wrapper(event: Event, func: Callable):
     return result
 
 
-def set_logger(logger: Logger):
-    logger.__enter__()
+def set_logger(logger: Logger, nlist: list[int]):
+    loggerstack_contextvar.set([logger])
+    nlist_contextvar.set(nlist[:])
 
 
 async def async_thread_wrapper(func: Callable):
     # start a thread
-    pool = ThreadPool(processes=1, initializer=set_logger, initargs=(get_current_logger(), ))
+    pool = ThreadPool(processes=1, initializer=set_logger, initargs=(get_current_logger(), get_current_nlist()))
 
     # create an event
     event = Event()
@@ -108,7 +109,7 @@ async def run_function(func: Callable, size: tuple[int, int] = (1600, 900), scal
         raise Exception("WebBrowserQueue not created, call the prepare() method first.")
     driver = await wbq.aquire()
 
-    log("starting async selenium thread")
+    log("handing control to async selenium thread")
     try:
         result = await async_thread_wrapper(lambda: _execute(driver, func, size, scale))
     finally:
