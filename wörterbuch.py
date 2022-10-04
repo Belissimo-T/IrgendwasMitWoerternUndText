@@ -6,6 +6,7 @@ from io import BytesIO
 import seleniumutil
 import google_dictionary
 from context_logger import log_decorator
+from belissibot_framework import BotError
 
 DICT_PREFIX = "dictionaries/"
 
@@ -27,7 +28,10 @@ class Word:
                  example: str, force_no_stressed: bool = False):
         ipa = ipa.replace("'", "ˈ").replace("´", "ˈ").replace("`", "ˈ")
 
-        assert "ˈ" in ipa or force_no_stressed, "Phonetic transcription doesn't show a stressed syllable."
+        assert "ˈ" in ipa or force_no_stressed, BotError(
+            f"Phonetic transcription {ipa!r} doesn't show a stressed syllable. Put one of these symbols: `ˈ'´` in "
+            f"front of the stressed syllable. Didn't you read the documentation (`!wörterbuch render help`)? 🤨"
+        )
 
         self.syllables = syllables
         self.ipa = ipa
