@@ -27,8 +27,9 @@ def get_wb_help(name: str, description: str):
         f"!wörterbuch {name} \"rein·joi·nen\" \"ˈraɪndʒɔɪnən\" \"Verb\" \"einen Internetanruf oder eine "
         f"Videospielsession betreten\" \"Ahh! Er ist wieder reingejoined.\"",
         word=("The word. This symbol might be helpful: `·`", "str"),
-        ipa=("The phonetic transcription of the word. Mark the stressed syllable with one of these: `ˈ'´`. If you need "
-             "help transcribing your word to the phonetic alphabet, you can use the `!g2p` command.", "str"),
+        ipa=("The phonetic transcription of the word. Mark the start of a stressed syllable with one of these: `ˈ'´`. "
+             "If you need help transcribing your word to the phonetic alphabet, you can use the `!g2p` command.",
+             "str"),
         part_of_speech=("The part of speech of the word. E.g. `Substantiv`, `Verb`, `Adjektiv`.", "str"),
         meaning=("The meaning of the word.", "str"),
         example=("An example usage of the word. For example an example sentence.", "str")
