@@ -22,9 +22,6 @@ else:
     with open("cache.dat", "rb") as f:
         cache = pickle.load(f)
 
-        # cache migration code
-        cache = {element: " ".join(cache[element]) for element in cache}
-
 
 def strip_accents(s):
     return ''.join(c for c in unicodedata.normalize('NFD', s)
@@ -32,7 +29,8 @@ def strip_accents(s):
 
 
 def process_response(response: str) -> list[str]:
-    return response.replace("?", "ʔ").split(" ")
+    print(response)
+    return list(map(lambda x: x.replace(" ", "").replace("+", "").strip(), response.replace("?", "ʔ").split(" ")))
 
 
 def g2p(word, lng):
@@ -61,7 +59,7 @@ def g2p(word, lng):
     return process_response(outstr)
 
 
-VOWELS = "ɯəʏuʌɑʉyɤɞɪøɒoʊɵeɔœiaɶɨɜæɛɐɘ"  # taken from wikipedia, no guarantee to be accurate
+VOWELS = "ɯəʏuʌɑʉyɤɞɪøɒoʊɵeɔœiaɶɨɜæɛɐɘaeiouAEIOU"
 
 
 # Hal lo
@@ -78,7 +76,7 @@ def has_vowels(syllable: Union[list[str], str]):
 
 
 def get_syllables(phonemes: list[str], word: str):
-    assert len(phonemes) == len(word)
+    assert len(phonemes) == len(word), f"Length of phonemes {phonemes!r} and word {word!r} do not match."
 
     phoneme_syllables: list[str] = [""]
     word_syllables: list[str] = [""]
@@ -94,6 +92,7 @@ def get_syllables(phonemes: list[str], word: str):
             phoneme_syllables.append("")
             word_syllables.append("")
 
+        # add current phoneme and char to the current syllable
         phoneme_syllables[-1] += phonemes[i]
         word_syllables[-1] += word[i]
 

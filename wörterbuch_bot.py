@@ -346,17 +346,16 @@ async def g2p_help(client: discord.Client, message: discord.Message):
 async def g2p_(client: discord.Client, message: discord.Message, _word, lang):
     phonemes = g2p.g2p(_word, lang)
 
-    _, predicted_text_syllables = g2p.get_syllables(phonemes, _word)
-    # print(predicted_text_syllables, predicted_phoneme_syllables)
-    word = wörterbuch.Word(predicted_text_syllables, "".join(phonemes).replace("+", "").replace("_", ""), "", "",
+    p_phon_syllables, p_word_syllables = g2p.get_syllables(phonemes, _word)
+    word = wörterbuch.Word(p_word_syllables, "".join(phonemes).replace("+", "").replace("_", ""), "", "",
                            "", True)
 
     description = f"word: `{word.get_display_name()}`" \
                   f"\nipa: `{word.ipa}`\n"
     out = discord.Embed(title=f"Phonetics of `{_word}`", description=description,
                         color=discord.Color(0x00FF00))
-    # out.add_field(name="Predicted ~~Accurate~~ Syllabic Structure", inline=False,
-    #               value=word.get_formatted_syllabic_structure())
+    out.add_field(name="Predicted ~~Accurate~~ Syllabic Structure", inline=False,
+                  value=word.get_formatted_syllabic_structure(p_phon_syllables))
 
     await message.channel.send(embed=out)
 
