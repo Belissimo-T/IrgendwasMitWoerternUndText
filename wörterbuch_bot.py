@@ -353,10 +353,10 @@ async def g2p_(client: discord.Client, message: discord.Message, _word, lang):
 
     description = f"word: `{word.get_display_name()}`" \
                   f"\nipa: `{word.ipa}`\n"
-    out = discord.Embed(title=f"Phonetic \"analysis\" of `{_word}`", description=description,
+    out = discord.Embed(title=f"Phonetics of `{_word}`", description=description,
                         color=discord.Color(0x00FF00))
-    out.add_field(name="Predicted ~~Accurate~~ Syllabic Structure", inline=False,
-                  value=word.get_formatted_syllabic_structure())
+    # out.add_field(name="Predicted ~~Accurate~~ Syllabic Structure", inline=False,
+    #               value=word.get_formatted_syllabic_structure())
 
     await message.channel.send(embed=out)
 
