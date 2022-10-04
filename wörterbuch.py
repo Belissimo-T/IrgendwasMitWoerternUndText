@@ -28,10 +28,11 @@ class Word:
                  example: str, force_no_stressed: bool = False):
         ipa = ipa.replace("'", "ˈ").replace("´", "ˈ").replace("`", "ˈ")
 
-        assert "ˈ" in ipa or force_no_stressed, BotError(
-            f"Phonetic transcription {ipa!r} doesn't show a stressed syllable. Put one of these symbols: `ˈ'´` in "
-            f"front of the stressed syllable. Didn't you read the documentation (`!wörterbuch render help`)? 🤨"
-        )
+        if not ("ˈ" in ipa or force_no_stressed):
+            raise BotError(
+                f"Phonetic transcription {ipa!r} doesn't show a stressed syllable. Put one of these symbols: `ˈ'´` in "
+                f"front of the stressed syllable. Didn't you read the documentation (`!wörterbuch render help`)? 🤨"
+            )
 
         self.syllables = syllables
         self.ipa = ipa
