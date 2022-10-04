@@ -30,8 +30,8 @@ class Word:
 
         if not ("ˈ" in ipa or force_no_stressed):
             raise BotError(
-                f"Phonetic transcription `ipa` doesn't show a stressed syllable. Put one of these symbols: `ˈ'´` in "
-                f"front of the stressed syllable. Didn't you read the documentation (`!wörterbuch render help`)? 🤨"
+                f"Phonetic transcription `{ipa}` doesn't show a stressed syllable. Put one of these `ˈ'´` in "
+                f"front of the stressed syllable. \nDidn't you read the documentation (`!wörterbuch render help`)? 🤨🙄"
             )
 
         self.syllables = syllables
