@@ -107,7 +107,7 @@ class FontDir:
 class NoFontsError(BotError):
     def __init__(self):
         super().__init__(
-            "There are no Fonts available to perform this action. Try reviewing fonts with `!fontselect review`."
+            "There are no fonts available to perform this action. Try reviewing fonts with `!fontselect review`."
         )
 
 
