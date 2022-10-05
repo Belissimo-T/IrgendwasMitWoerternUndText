@@ -131,9 +131,10 @@ class FontSelector:
         self.remove_old_from_staging()
 
     def remove_old_from_staging(self):
-        for font in self.staging.font_paths:
-            if time.time() - 600 > os.stat(font).st_mtime:
-                self.unstage(Font(font))
+        # for font in self.staging.font_paths:
+        #     if time.time() - 600 > os.stat(font).st_mtime:
+        #         self.unstage(Font(font))
+        ...
 
     @property
     def finished_fonts_count(self):
