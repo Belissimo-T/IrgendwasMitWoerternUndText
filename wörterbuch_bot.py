@@ -409,7 +409,7 @@ async def fontselect_review(client: discord.Client, message: discord.Message):
         await message.reply(embed=get_font_review_embed(fs))
         return
 
-    view = discord.ui.View()
+    view = discord.ui.View(timeout=60*60*12)
 
     class AcceptRejectFontButton(discord.ui.Button):
         async def callback(self, interaction: discord.Interaction):
