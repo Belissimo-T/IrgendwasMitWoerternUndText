@@ -409,30 +409,29 @@ async def fontselect_review(client: discord.Client, message: discord.Message):
         await message.reply(embed=get_font_review_embed(fs))
         return
 
-    view = discord.ui.View(timeout=60*60*12)
+    view = discord.ui.View(timeout=60 * 60 * 12)
+    view.first_change = True
 
     class AcceptRejectFontButton(discord.ui.Button):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+
+
         async def callback(self, interaction: discord.Interaction):
-            asyncio.create_task(bot_app.invoke(message, client))
+            if view.first_change:
+                asyncio.create_task(bot_app.invoke(message, client))
+
+            view.first_change = False
 
             if self.custom_id == "good":
                 fs.accept(font)
-                self.label = "Accepted!"
                 self.style = discord.ButtonStyle.success
-
-                for child in view.children:
-                    if child == self:
-                        continue
-                    child.label = "Bad"
             elif self.custom_id == "bad":
                 fs.reject(font)
-                self.label = "Rejected!"
                 self.style = discord.ButtonStyle.danger
-
-                for child in view.children:
-                    if child == self:
-                        continue
-                    child.label = "Good"
+            elif self.custom_id == "unsure":
+                fs.unstage(font)
+                self.style = discord.ButtonStyle.blurple
             else:
                 # ?
                 return
@@ -444,8 +443,15 @@ async def fontselect_review(client: discord.Client, message: discord.Message):
 
             await interaction.response.edit_message(view=view)
 
-    view.add_item(AcceptRejectFontButton(label="Good", emoji="👍", style=discord.ButtonStyle.success, custom_id="good"))
-    view.add_item(AcceptRejectFontButton(label="Bad", emoji="👎", style=discord.ButtonStyle.danger, custom_id="bad"))
+    view.add_item(
+        AcceptRejectFontButton(label="Good", emoji="👍", style=discord.ButtonStyle.success, custom_id="good")
+    )
+    view.add_item(
+        AcceptRejectFontButton(label="Bad", emoji="👎", style=discord.ButtonStyle.danger, custom_id="bad")
+    )
+    view.add_item(
+        AcceptRejectFontButton(label="Unsure", emoji="🤷", style=discord.ButtonStyle.blurple, custom_id="unsure")
+    )
     testtext = font.name + "\n" + FONTS_DEFAULT_TESTTEXT
 
     embed = font.get_embed(testtext=testtext)

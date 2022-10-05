@@ -150,7 +150,10 @@ class FontSelector:
         self.remove_old_from_staging()
 
         while 1:
-            candidate = self.candidates.random_font()
+            try:
+                candidate = self.candidates.random_font()
+            except NoFontsError:
+                candidate = self.staging.random_font()
 
             try:
                 _ = ImageFont.truetype(candidate.font_filepath, 30)
@@ -166,9 +169,7 @@ class FontSelector:
         return font.moved(self.staging.dir_path)
 
     def unstage(self, font: Font):
-        assert font in self.staging.fonts, f"Font {font!r} not staging."
-
-        shutil.move(font.font_filepath, self.candidates.dir_path)
+        shutil.move(self.relocalize(font).font_filepath, self.candidates.dir_path)
 
     def relocalize(self, font: Font) -> Font:
         if font in self.accepted.fonts:
