@@ -11,7 +11,7 @@ import postermywall as pmw
 import wörterbuch
 from belissibot_framework import App, construct_help_embed
 
-from font_selection import FontSelector, get_font_review_text, NoMoreCandidatesError
+from font_selection import FontSelector, get_font_review_text, NoFontsError
 from font_selection import DEFAULT_TESTTEXT as FONTS_DEFAULT_TESTTEXT
 from zitat import get_image, get_zitat
 
@@ -405,7 +405,7 @@ async def fontselect_review(client: discord.Client, message: discord.Message):
 
     try:
         font = fs.stage_next_candidate()
-    except NoMoreCandidatesError:
+    except NoFontsError:
         await message.reply(embed=get_font_review_embed(fs))
         return
 
