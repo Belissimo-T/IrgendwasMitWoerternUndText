@@ -7,6 +7,9 @@ import time
 import discord
 from PIL import Image, ImageDraw, ImageFont
 import dataclasses
+
+from belissibot_framework import BotError
+
 from text_tools import get_lines
 
 DEFAULT_TESTTEXT = "AaBbCc DdEeFf GgHhIi JjKkLl MmNnOo PpQqRr SsTtUu VvWwXx YyZz ÄäÖöÜüẞß !?.-"
@@ -87,7 +90,7 @@ class FontDir:
         try:
             return random.choice(candidate_font_paths)
         except IndexError as e:
-            raise NoMoreCandidatesError() from e
+            raise NoFontsError from e
 
     def random_font(self):
         return Font(self.random_path())
@@ -101,13 +104,11 @@ class FontDir:
         return len(self.font_paths)
 
 
-class NoMoreCandidatesError(Exception): ...
-
-
-class FontNotStagedError(Exception): ...
-
-
-class NoAcceptedFontsError(Exception): ...
+class NoFontsError(BotError):
+    def __init__(self):
+        super().__init__(
+            "There are no Fonts available to perform this action. Try reviewing fonts with `!fontselect review`."
+        )
 
 
 class FontSelector:
