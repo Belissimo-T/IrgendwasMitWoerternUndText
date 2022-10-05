@@ -191,6 +191,9 @@ def get_font_review_text(fs: FontSelector) -> str:
     total, accepted, excluded, staged = fs.total_font_count, fs.accepted.font_count, fs.excluded.font_count, \
                                         fs.staging.font_count
 
+    if total == 0:
+        total = float("inf")
+
     return (f"Of `{total:_}` fonts:\n"
             f" - `{accepted:_}` (`{accepted / total:.1%}`) have been accepted\n"
             f" - `{excluded:_}` (`{excluded / total:.1%}`) have been excluded\n"
