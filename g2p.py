@@ -6,6 +6,8 @@ from io import BytesIO
 from bs4 import BeautifulSoup
 import unicodedata
 
+from wörterbuch import Word
+
 url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/runG2P'
 
 
@@ -62,11 +64,6 @@ def g2p(word, lng):
 VOWELS = "ɯəʏuʌɑʉyɤɞɪøɒoʊɵeɔœiaɶɨɜæɛɐɘaeiouAEIOU"
 
 
-# Hal lo
-# Ver ant  wor tung
-# fɛɐ ʔant vɔɐ tʊŋ
-# f ɛɐʔa ntv ɔɐ t ʊ ŋ
-
 def has_vowels(syllable: Union[list[str], str]):
     for phonemes in syllable:
         for phoneme in phonemes:
@@ -99,12 +96,18 @@ def get_syllables(phonemes: list[str], word: str):
     return phoneme_syllables, word_syllables
 
 
+def main():
+    lng = input("lang (ex. deu/eng-US)>")
+
+    while 1:
+        word = input("word>")
+
+        phonemes = g2p(word, lng)
+
+        phon_syl, word_syl = get_syllables(phonemes, word)
+
+        print(Word.get_formatted_syllabic_structure(phon_syl, word_syl))
+
+
 if __name__ == '__main__':
-    word = input("word>")
-    lng = input("lang (zb. deu/eng-US)>")
-
-    phonemes = g2p(word, lng)
-    # phonemes = list("fɛɐʔantvɔɐtʊŋ")
-    # phonemes = ['l', 'aʊ', '_', 'f', 'ə', 'n\n']
-
-    print(get_syllables(phonemes, word))
+    main()

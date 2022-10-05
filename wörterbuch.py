@@ -46,11 +46,12 @@ class Word:
     def get_display_name(self):
         return "·".join(self.syllables)
 
-    def get_formatted_syllabic_structure(self, ipa_syllables: list[str]):
+    @staticmethod
+    def get_formatted_syllabic_structure(text_syllables: list[str], ipa_syllables: list[str]):
         total_text = []
         total_ipa = []
-        for i in range(len(self.syllables)):
-            text = self.syllables[i]
+        for i in range(len(text_syllables)):
+            text = text_syllables[i]
             ipa = ipa_syllables[i].replace("_", "")
 
             space = max(len(text), len(ipa))

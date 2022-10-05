@@ -10,6 +10,9 @@ import postermywall
 import postermywall as pmw
 import wörterbuch
 from belissibot_framework import App, construct_help_embed
+
+from font_selection import FontSelector, get_font_review_text, NoMoreCandidatesError
+from font_selection import DEFAULT_TESTTEXT as FONTS_DEFAULT_TESTTEXT
 from zitat import get_image, get_zitat
 
 if not os.path.exists("dictionaries/global.dict"):
@@ -355,9 +358,102 @@ async def g2p_(client: discord.Client, message: discord.Message, _word, lang):
     out = discord.Embed(title=f"Phonetics of `{_word}`", description=description,
                         color=discord.Color(0x00FF00))
     out.add_field(name="Predicted ~~Accurate~~ Syllabic Structure", inline=False,
-                  value=word.get_formatted_syllabic_structure(p_phon_syllables))
+                  value=wörterbuch.Word.get_formatted_syllabic_structure(p_word_syllables, p_phon_syllables))
 
     await message.channel.send(embed=out)
+
+
+def get_font_review_embed(fs: FontSelector):
+    if fs.candidates.font_count == 0:
+        if fs.staging.font_count == 0:
+            out = discord.Embed(
+                title="Font Review finished!",
+                description=f"**All fonts have been reviewed!** 🎉 Thanks for your contribution.",
+                color=discord.Color(0x00FF00)
+            )
+
+        else:
+            out = discord.Embed(
+                title="Font review almost finished!",
+                description="Finish reviewing these last fonts and then we are done!\n" +
+                            "\n".join([f" - `{font.name}`" for font in fs.staging.fonts]),
+                color=discord.Color(0xFFFF00)
+            )
+    else:
+        out = discord.Embed(
+            title="Keep reviewing!",
+            color=discord.Color(0xFFFF00)
+        )
+
+    out.add_field(name="Stats", value=get_font_review_text(fs))
+
+    return out
+
+
+@bot_app.route("!fontselect", delete_message=False)
+async def fontselect(client: discord.Client, message: discord.Message):
+    fs = FontSelector()
+
+    # view = discord.ui.View()
+    # learn_review_button = discord.ui.Button(label="Learn how to review fonts", style=discord.ButtonStyle.link)
+    # view.add_item(learn_review_button)
+
+    await message.reply(embed=get_font_review_embed(fs))
+
+
+@bot_app.route("!fontselect review", delete_message=False)
+async def fontselect_review(client: discord.Client, message: discord.Message):
+    fs = FontSelector()
+
+    try:
+        font = fs.stage_next_candidate()
+    except NoMoreCandidatesError:
+        await message.reply(embed=get_font_review_embed(fs))
+        return
+
+    view = discord.ui.View()
+
+    class AcceptRejectFontButton(discord.ui.Button):
+        async def callback(self, interaction: discord.Interaction):
+            asyncio.create_task(bot_app.invoke(message, client))
+
+            if self.custom_id == "good":
+                fs.accept(font)
+                self.label = "Accepted!"
+                self.style = discord.ButtonStyle.success
+
+                for child in view.children:
+                    if child == self:
+                        continue
+                    child.label = "Bad"
+            elif self.custom_id == "bad":
+                fs.reject(font)
+                self.label = "Rejected!"
+                self.style = discord.ButtonStyle.danger
+
+                for child in view.children:
+                    if child == self:
+                        continue
+                    child.label = "Good"
+            else:
+                # ?
+                return
+
+            for child in view.children:
+                if child == self:
+                    continue
+                child.style = discord.ButtonStyle.secondary
+
+            await interaction.response.edit_message(view=view)
+
+    view.add_item(AcceptRejectFontButton(label="Good", emoji="👍", style=discord.ButtonStyle.success, custom_id="good"))
+    view.add_item(AcceptRejectFontButton(label="Bad", emoji="👎", style=discord.ButtonStyle.danger, custom_id="bad"))
+    testtext = font.name + "\n" + FONTS_DEFAULT_TESTTEXT
+
+    await message.reply(embed=font.get_embed(testtext=testtext), file=font.get_dc_image(text=testtext), view=view)
+
+    # # unstage font asynchronously after 6 minutes
+    # asyncio.create_task(unstage_font_after_time(fs, font, 6 * 60))
 
 
 with open("secret.token", "r") as f:

@@ -106,7 +106,8 @@ def _execute(webdriver: WebDriver, func: Callable, size: tuple[int, int] = (1600
 
 async def run_function(func: Callable, size: tuple[int, int] = (1600, 900), scale: float = 1):
     if not wbq:
-        raise Exception("WebBrowserQueue not created, call the prepare() method first.")
+        # raise Exception("WebBrowserQueue not created, call the prepare() method first.")
+        prepare()
     driver = await wbq.aquire()
 
     log("handing control to async selenium thread")

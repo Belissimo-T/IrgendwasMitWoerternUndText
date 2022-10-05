@@ -7,14 +7,18 @@ import requests
 from PIL import Image, ImageDraw, ImageFont, PngImagePlugin
 from io import BytesIO
 
+from font_selection import FontSelector
+from text_tools import get_lines
+
+
 # https://web.archive.org/web/20160313023518/http://fonts.debian.net/free-fonts-20091020.tar.gz
 
-if os.name == "nt":
-    path = "C:/Windows/Fonts"
-else:
-    path = "fonts"
-
-_, _, (fonts, ) = zip(*list(os.walk(path)))
+# if os.name == "nt":
+#     path = "C:/Windows/Fonts"
+# else:
+#     path = "fonts"
+#
+# _, _, (fonts, ) = zip(*list(os.walk(path)))
 
 
 def get_image(width: int = 1600, height: int = 900, blur: int = None) -> bytes:
@@ -25,47 +29,27 @@ def get_image(width: int = 1600, height: int = 900, blur: int = None) -> bytes:
     return data
 
 
-def get_lines(text: str, font: ImageFont.ImageFont, max_width: int):
-    words = text.split(" ")
-
-    lines: list[str] = [""]
-    for word in words:
-        if font.getsize(lines[-1] + " " + word)[0] > max_width:
-            lines.append(word)
-        else:
-            lines[-1] += " " + word
-
-    return lines
-
-
 def get_zitat(text: str, author: str, image_data: bytes = None):
     dim = (1600, 900)
 
     image_data = get_image(*dim) if image_data is None else image_data
+    # noinspection PyTypeChecker
     image: PngImagePlugin.PngImageFile = Image.open(BytesIO(image_data), formats=["WEBP"])
     draw = ImageDraw.Draw(image)
 
     pos = (100, 100)
 
-    size = random.randint(80, 150)
-    random.shuffle(fonts)
-    for font_name in fonts:
-        try:
-            font = ImageFont.truetype(os.path.join(path, font_name), size)
-            break
-        except OSError as e:
-            traceback.print_exc()
-            print(f"Couldn't open {font_name}, {e}")
-    else:
-        raise OSError("Stopped trying opening fonts. No fonts openable.")
-    lines = "\n".join(get_lines(text, font, dim[0] - 200))
+    font = ImageFont.truetype(FontSelector().accepted.random_path(), size=random.randint(80, 150))
+
+    # noinspection PyTypeChecker
+    lines = "\n".join(get_lines(text, font, dim[0] - 200)[0])
 
     avg_color = image.resize((1, 1), resample=Image.LINEAR).getpixel((0, 0))
 
     color = (255, 255, 255) if sum(avg_color) < sum((128, 128, 128)) else (0, 0, 0)
 
     draw.multiline_text(xy=pos, text=lines + f"\n- {author}",
-                        fill=color, font=font,# anchor="mt",
+                        fill=color, font=font,  # anchor="mt",
                         align="center", stroke_width=2, stroke_fill=tuple((255 - rgb) for rgb in color))
 
     img_byte_arr = BytesIO()
