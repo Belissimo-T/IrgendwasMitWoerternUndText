@@ -133,8 +133,6 @@ async def zitat(client: discord.Client, message: discord.Message, text: str, aut
         file = discord.File(img, filename="zitat.png")
         await message.channel.send("pure inspiration.", file=file)
 
-    await message.delete()
-
 
 ESCAPED_CHARS = "`\\"
 
@@ -450,7 +448,9 @@ async def fontselect_review(client: discord.Client, message: discord.Message):
     view.add_item(AcceptRejectFontButton(label="Bad", emoji="👎", style=discord.ButtonStyle.danger, custom_id="bad"))
     testtext = font.name + "\n" + FONTS_DEFAULT_TESTTEXT
 
-    await message.reply(embed=font.get_embed(testtext=testtext), file=font.get_dc_image(text=testtext), view=view)
+    embed = font.get_embed(testtext=testtext)
+    embed.set_footer(text=f"Font {fs.finished_fonts_count + 1} of {fs.total_font_count}")
+    await message.reply(embed=embed, file=font.get_dc_image(text=testtext), view=view)
 
     # # unstage font asynchronously after 6 minutes
     # asyncio.create_task(unstage_font_after_time(fs, font, 6 * 60))

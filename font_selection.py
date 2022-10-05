@@ -135,11 +135,14 @@ class FontSelector:
                 self.unstage(Font(font))
 
     @property
+    def finished_fonts_count(self):
+        return self.accepted.font_count + self.excluded.font_count
+
+    @property
     def total_font_count(self):
         return (self.candidates.font_count
                 + self.staging.font_count
-                + self.accepted.font_count
-                + self.excluded.font_count)
+                + self.finished_fonts_count)
 
     def stage_next_candidate(self) -> Font:
         self.remove_old_from_staging()
