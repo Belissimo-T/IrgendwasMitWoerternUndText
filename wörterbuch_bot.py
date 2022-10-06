@@ -497,7 +497,7 @@ def get_embed_image_font(fs: font_selection.FontSelector, font: font_selection.F
     return embed, view, font.get_dc_image(text=testtext)
 
 
-@bot_app.add_help("!fontselect", "Start the font review process.", "!fontselect review")
+@bot_app.add_help("!fontselect review", "Start the font review process.", "!fontselect review")
 @bot_app.route("!fontselect review", delete_message=False)
 async def fontselect_review(client: discord.Client, message: discord.Message):
     fs = font_selection.FontSelector()
@@ -512,7 +512,7 @@ async def fontselect_review(client: discord.Client, message: discord.Message):
 
     embed.set_footer(text=f"{fs.finished_fonts_count + 1} of {fs.total_font_count}")
 
-    await message.reply(embed=embed, view=view, file=file)
+    await message.reply(embed=embed, view=view, file=file, mention_author=False)
 
     # # unstage font asynchronously after 6 minutes
     # asyncio.create_task(unstage_font_after_time(fs, font, 6 * 60))
