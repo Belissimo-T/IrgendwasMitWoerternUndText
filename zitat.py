@@ -1,7 +1,4 @@
-import os
 import random
-import sys
-import traceback
 
 import requests
 from PIL import Image, ImageDraw, ImageFont, PngImagePlugin
@@ -10,15 +7,6 @@ from io import BytesIO
 from font_selection import FontSelector
 from text_tools import get_lines
 
-
-# https://web.archive.org/web/20160313023518/http://fonts.debian.net/free-fonts-20091020.tar.gz
-
-# if os.name == "nt":
-#     path = "C:/Windows/Fonts"
-# else:
-#     path = "fonts"
-#
-# _, _, (fonts, ) = zip(*list(os.walk(path)))
 
 
 def get_image(width: int = 1600, height: int = 900, blur: int = None) -> bytes:
