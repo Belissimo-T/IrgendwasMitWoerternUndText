@@ -414,7 +414,7 @@ async def fontselect(client: discord.Client, message: discord.Message, raw_args:
         return get_joined_str(out)
 
     flags = [flag.lower() for flag in raw_args.split(" ")]
-    if "staging" in flags:
+    if "staged" in flags:
         out.add_field(name=f"Staging ({fs.staging.font_count})",
                       value=get_value_for_fontslist(fs.staging.fonts))
     if "candidates" in flags:
