@@ -169,7 +169,14 @@ class FontSelector:
         return font.moved(self.staging.dir_path)
 
     def unstage(self, font: Font):
-        shutil.move(self.relocalize(font).font_filepath, self.candidates.dir_path)
+        try:
+            shutil.move(self.relocalize(font).font_filepath, self.candidates.dir_path)
+        except shutil.Error:
+            # font already unstaged
+            ...
+
+    def find(self, font_name: str) -> Font:
+        return self.relocalize(Font(os.path.join(self.candidates.dir_path, font_name + ".ttf")))
 
     def relocalize(self, font: Font) -> Font:
         if font in self.accepted.fonts:
@@ -200,4 +207,4 @@ def get_font_review_text(fs: FontSelector) -> str:
     return (f"Of `{total:_}` fonts:\n"
             f" - `{accepted:_}` (`{accepted / total:.1%}`) have been accepted\n"
             f" - `{excluded:_}` (`{excluded / total:.1%}`) have been excluded\n"
-            f" - `{staged:_}` (`{staged / total:.1%}`) are currently staged")
+            f" = `{accepted + excluded:_}` (`{(accepted + excluded) / total:.1%}`) processed")

@@ -5,14 +5,13 @@ from typing import Literal
 
 import discord
 
+import font_selection
 import g2p
 import postermywall
 import postermywall as pmw
 import wörterbuch
-from belissibot_framework import App, construct_help_embed
+from belissibot_framework import App, construct_help_embed, BotError
 
-from font_selection import FontSelector, get_font_review_text, NoFontsError
-from font_selection import DEFAULT_TESTTEXT as FONTS_DEFAULT_TESTTEXT
 from zitat import get_image, get_zitat
 
 if not os.path.exists("dictionaries/global.dict"):
@@ -361,7 +360,7 @@ async def g2p_(client: discord.Client, message: discord.Message, _word, lang):
     await message.channel.send(embed=out)
 
 
-def get_font_review_embed(fs: FontSelector):
+def get_font_review_embed(fs: font_selection.FontSelector):
     if fs.candidates.font_count == 0:
         if fs.staging.font_count == 0:
             out = discord.Embed(
@@ -383,83 +382,188 @@ def get_font_review_embed(fs: FontSelector):
             color=discord.Color(0xFFFF00)
         )
 
-    out.add_field(name="Stats", value=get_font_review_text(fs))
+    out.add_field(name="Stats", value=font_selection.get_font_review_text(fs), inline=False)
 
     return out
 
 
-@bot_app.route("!fontselect", delete_message=False)
-async def fontselect(client: discord.Client, message: discord.Message):
-    fs = FontSelector()
+@bot_app.add_help("!fontselect",
+                  "Prints information about the font review process and outputs fonts of different review-categories.",
+                  "!fontselect",
+                  argstr="[review] [accepted] [rejected] [staging]")
+@bot_app.route("!fontselect", delete_message=False, raw_args=True)
+async def fontselect(client: discord.Client, message: discord.Message, raw_args: str):
+    fs = font_selection.FontSelector()
 
     # view = discord.ui.View()
     # learn_review_button = discord.ui.Button(label="Learn how to review fonts", style=discord.ButtonStyle.link)
     # view.add_item(learn_review_button)
 
-    await message.reply(embed=get_font_review_embed(fs))
+    out = get_font_review_embed(fs)
+
+    def get_value_for_fontslist(fonts):
+        def get_joined_str(fonts: list):
+            return ", ".join([f"`{font.name}`" for font in fonts])
+
+        out = []
+        for font in fonts:
+            if len(get_joined_str(out + [font])) + 5 > 1024:
+                return get_joined_str(out) + ", ..."
+            out.append(font)
+
+        return get_joined_str(out)
+
+    flags = [flag.lower() for flag in raw_args.split(" ")]
+    if "staging" in flags:
+        out.add_field(name=f"Staging ({fs.staging.font_count})",
+                      value=get_value_for_fontslist(fs.staging.fonts))
+    if "candidates" in flags:
+        out.add_field(name=f"Candidates ({fs.candidates.font_count})",
+                      value=get_value_for_fontslist(fs.candidates.fonts))
+    if "accepted" in flags:
+        out.add_field(name=f"Accepted ({fs.accepted.font_count})",
+                      value=get_value_for_fontslist(fs.accepted.fonts))
+    if "rejected" in flags:
+        out.add_field(name=f"Rejected ({fs.excluded.font_count})",
+                      value=get_value_for_fontslist(fs.excluded.fonts))
+
+    await message.reply(embed=out)
 
 
-@bot_app.route("!fontselect review", delete_message=False)
-async def fontselect_review(client: discord.Client, message: discord.Message):
-    fs = FontSelector()
+def get_font_status(fs: font_selection.FontSelector, font: font_selection.Font
+                    ) -> Literal["good", "bad", 'unsure', None]:
+    if font in fs.accepted.fonts:
+        return "good"
+    elif font in fs.excluded.fonts:
+        return "bad"
+    return None
 
-    try:
-        font = fs.stage_next_candidate()
-    except NoFontsError:
-        await message.reply(embed=get_font_review_embed(fs))
-        return
 
+def get_embed_image_font(fs: font_selection.FontSelector, font: font_selection.Font,
+                         message: discord.Message | None = None, client: discord.Client | None = None,
+                         selected_button: Literal["good", "bad", "unsure"] | None = None):
     view = discord.ui.View(timeout=60 * 60 * 12)
     view.first_change = True
 
-    class AcceptRejectFontButton(discord.ui.Button):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
+    class FontReviewButton(discord.ui.Button):
+        def __init__(self, *args, style, custom_id, **kwargs):
+            self.original_style = style
 
+            if selected_button is not None and custom_id != selected_button:
+                style = discord.ButtonStyle.secondary
+            super().__init__(*args, style=style, custom_id=custom_id, **kwargs)
+
+        def reset_style(self):
+            self.style = self.original_style
 
         async def callback(self, interaction: discord.Interaction):
-            if view.first_change:
+            if view.first_change and (message is not None and client is not None):
                 asyncio.create_task(bot_app.invoke(message, client))
 
             view.first_change = False
 
+            for child in view.children:
+                child.style = discord.ButtonStyle.secondary
+
+            self.reset_style()
+
             if self.custom_id == "good":
                 fs.accept(font)
-                self.style = discord.ButtonStyle.success
             elif self.custom_id == "bad":
                 fs.reject(font)
-                self.style = discord.ButtonStyle.danger
             elif self.custom_id == "unsure":
                 fs.unstage(font)
-                self.style = discord.ButtonStyle.blurple
-            else:
-                # ?
-                return
 
-            for child in view.children:
-                if child == self:
-                    continue
-                child.style = discord.ButtonStyle.secondary
+                for child in view.children:
+                    if not isinstance(child, FontReviewButton):
+                        continue
+                    child.reset_style()
 
             await interaction.response.edit_message(view=view)
 
     view.add_item(
-        AcceptRejectFontButton(label="Good", emoji="👍", style=discord.ButtonStyle.success, custom_id="good")
+        FontReviewButton(label="Good", emoji="👍", style=discord.ButtonStyle.success, custom_id="good")
     )
     view.add_item(
-        AcceptRejectFontButton(label="Bad", emoji="👎", style=discord.ButtonStyle.danger, custom_id="bad")
+        FontReviewButton(label="Bad", emoji="👎", style=discord.ButtonStyle.danger, custom_id="bad")
     )
     view.add_item(
-        AcceptRejectFontButton(label="Unsure", emoji="🤷", style=discord.ButtonStyle.blurple, custom_id="unsure")
+        FontReviewButton(label="Unsure", emoji="🤷", style=discord.ButtonStyle.blurple, custom_id="unsure")
     )
-    testtext = font.name + "\n" + FONTS_DEFAULT_TESTTEXT
+    testtext = font.name + "\n" + font_selection.DEFAULT_TESTTEXT
 
     embed = font.get_embed(testtext=testtext)
-    embed.set_footer(text=f"Font {fs.finished_fonts_count + 1} of {fs.total_font_count}")
-    await message.reply(embed=embed, file=font.get_dc_image(text=testtext), view=view)
+
+    return embed, view, font.get_dc_image(text=testtext)
+
+
+@bot_app.add_help("!fontselect", "Start the font review process.", "!fontselect review")
+@bot_app.route("!fontselect review", delete_message=False)
+async def fontselect_review(client: discord.Client, message: discord.Message):
+    fs = font_selection.FontSelector()
+
+    try:
+        font = fs.stage_next_candidate()
+    except font_selection.NoFontsError:
+        await message.reply(embed=get_font_review_embed(fs))
+        return
+
+    embed, view, file = get_embed_image_font(fs, font, message, client)
+
+    embed.set_footer(text=f"{fs.finished_fonts_count + 1} of {fs.total_font_count}")
+
+    await message.reply(embed=embed, view=view, file=file)
 
     # # unstage font asynchronously after 6 minutes
     # asyncio.create_task(unstage_font_after_time(fs, font, 6 * 60))
+
+
+@bot_app.add_help("!fontselect info",
+                  "Review a specific font.",
+                  "!fontselect info \"amalgama\"",
+                  font_name="The name of the font you want to review.")
+@bot_app.route("!fontselect info", delete_message=False)
+async def fontselect_info(client: discord.Client, message: discord.Message, font_name: str):
+    fs = font_selection.FontSelector()
+
+    def add_status_field_to_embed(embed: discord.Embed):
+        if font in fs.candidates.fonts:
+            embed.add_field(name="Status", value="Font was not reviewed yet and is a candidate.")
+        elif font in fs.staging.fonts:
+            embed.add_field(name="Status", value="Font is currently being reviewed.")
+        elif font in fs.accepted.fonts:
+            embed.add_field(name="Status", value="Font was accepted.")
+        elif font in fs.excluded.fonts:
+            embed.add_field(name="Status", value="Font was rejected.")
+
+    try:
+        def get_new_callback(original_callback):
+            async def new_callback(interaction: discord.Interaction):
+                await original_callback(interaction)
+
+                embed = interaction.message.embeds[0].copy()
+                embed.remove_field(-1)
+                add_status_field_to_embed(embed)
+                # if attachments=[] is left out, the image in the embed will be additionally sent as an attachment
+                await interaction.message.edit(embed=embed, attachments=[])
+
+            return new_callback
+
+        font = fs.find(font_name)
+
+        embed, view, file = get_embed_image_font(fs, font, message, client, selected_button=get_font_status(fs, font))
+        view.first_change = False
+
+        for child in view.children:
+            if not isinstance(child, discord.ui.Button):
+                continue
+
+            child.callback = get_new_callback(child.callback)
+
+        add_status_field_to_embed(embed)
+        await message.reply(embed=embed, view=view, file=file)
+    except AssertionError:
+        raise BotError(f"The font `{font_name}` does not exist.")
 
 
 with open("secret.token", "r") as f:
