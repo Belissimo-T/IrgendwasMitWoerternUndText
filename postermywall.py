@@ -82,6 +82,9 @@ def zoom(webdriver: WebDriver, target: float = 100) -> int:
 
 @log_decorator(lambda args: f"Preparing website {args['url']}")
 async def prepare(webdriver: WebDriver, url: str):
+    log("Resetting zoom")
+    zoom(webdriver, 100)
+
     with log("Getting website"):
         webdriver.get(url)
 
