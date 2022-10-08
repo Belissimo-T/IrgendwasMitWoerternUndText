@@ -5,7 +5,8 @@ from typing import Callable, Union
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.webdriver import WebDriver
 
-from context_logger import Logger, log, log_decorator, loggerstack_contextvar, nlist_contextvar, get_current_nlist, get_current_logger
+from context_logger import Logger, log, log_decorator, loggerstack_contextvar, nlist_contextvar, get_current_nlist, \
+    get_current_logger
 
 chrome_options = Options()
 chrome_options.add_argument("--headless")
@@ -60,7 +61,7 @@ def prepare():
 # warten bis der queue thread das lock gelöst hat, das in den queue gepackt wurde
 
 
-def zoom(webdriver: WebDriver, factor: float):
+def zoom(webdriver: WebDriver, factor: float = 1):
     webdriver.execute_script(f"document.body.style.zoom='{factor}'")
 
 

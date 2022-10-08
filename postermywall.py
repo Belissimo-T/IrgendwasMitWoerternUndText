@@ -141,7 +141,7 @@ async def prepare(webdriver: WebDriver, url: str):
 
 @log_decorator("Screenshotting")
 def screenshot(webdriver: WebDriver) -> bytes:
-    zoom(webdriver, 100)
+    seleniumutil.zoom(webdriver, 1)
     # noinspection PyTypeChecker
     return webdriver.find_element(By.ID, "whiteboard").screenshot_as_png
 
