@@ -162,9 +162,7 @@ class FontSelector:
                 self.reject(candidate)
 
     def stage(self, font: Font):
-        assert font in self.candidates.fonts, f"Font {font!r} not in candidates."
-
-        shutil.move(font.font_filepath, self.staging.dir_path)
+        shutil.move(self.relocalize(font).font_filepath, self.staging.dir_path)
 
         return font.moved(self.staging.dir_path)
 
