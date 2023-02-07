@@ -1,10 +1,21 @@
 # IrgendwasMitWörternUndText
 
 ## Requirements
-* Python 3.10+
+
 * `secret.token`
 * `client.id`
+* `dictionaries` folder
+* `cache` folder
+* `fonts` folder with `*.ttf` fonts
+
+### Local
+
+* Python 3.10+
 * Wörterbuch/PosterMyWall
-  * chromedriver
-* Zitate
-  * `fonts` folder with `*.ttf` fonts
+    * chromedriver
+
+### Docker
+
+* Volume mounts
+    * `/home/seluser/discord_bot/dictionaries`
+    * `/home/seluser/discord_bot/fonts`
